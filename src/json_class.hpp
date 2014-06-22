@@ -65,7 +65,8 @@ private:
     }
 public:
     JSON() : type(null), as_num(0) {}
-    explicit JSON(bool val) : type(boolean), as_bool(val) {}
+    // To convert to a boolean you need to pass an extra int to differentiate between bools and numbers .. use JBool method to create a boolean
+    JSON(bool val, int) : type(boolean), as_bool(val) {} 
     JSON(long double val) : type(number), as_num(val) {}
     JSON(std::string val) : type(text), as_string(val) {}
     JSON(JMap val) : type(map), as_map(val) {}
@@ -85,7 +86,16 @@ public:
     /// Render as number
     operator long double() {
         assert(type == number);
-        return (as_num);
+        return as_num;
+    }
+    /// Render as an integer
+    operator long long () {
+        assert(type == number);
+        return as_num;
+    }
+    operator int () {
+        assert(type == number);
+        return as_num;
     }
     /// Return as a UTF8 encoded string
     operator const std::string&() const {
@@ -159,6 +169,10 @@ std::ostream& operator <<(ostream& s, const JSON& j) {
         }
     };
     return s;
+}
+
+JSON JBool(bool val) {
+    return JSON(val, 1);
 }
 
 }
