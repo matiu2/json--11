@@ -14,11 +14,17 @@ go_bandit([](){
             AssertThat(j.isNull(), Equals(true));
             AssertThat(j.whatIs(), Equals(JSON::null));
         });
-        it("2. Can be true and false", [](){
+        it("2. Can be true", [](){
             JSON j(true);
             AssertThat(j.isNull(), Equals(false));
             AssertThat(j.whatIs(), Equals(JSON::boolean));
             AssertThat(j, Equals(true));
+        });
+        it("2. Can be false", [](){
+            JSON j(false);
+            AssertThat(j.isNull(), Equals(false));
+            AssertThat(j.whatIs(), Equals(JSON::boolean));
+            AssertThat(j, Equals(false));
         });
     });
     
