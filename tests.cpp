@@ -38,6 +38,12 @@ go_bandit([](){
             AssertThat(j.whatIs(), Equals(JSON::number));
             AssertThat((long double)j, Equals(3.1415927));
         });
+        it("1.6. Can be a string", [](){
+            JSON j("Hello there");
+            AssertThat(j.isNull(), Equals(false));
+            AssertThat(j.whatIs(), Equals(JSON::text));
+            AssertThat((const std::string&)j, Equals("Hello there"));
+        });
     });
 });
 
