@@ -15,8 +15,6 @@ I've turned a lot of the ragel state machines into hard coded switch based state
 */
 
 #pragma once
-#ifndef YAJP_JSON_HPP
-#define YAJP_JSON_HPP
 
 #include <string>
 #include <stdexcept>
@@ -25,10 +23,10 @@ I've turned a lot of the ragel state machines into hard coded switch based state
 #include <sstream>
 #include <map>
 
-namespace yajp {
+namespace json {
 
 
-#line 41 "/home/matiu/projects/json++11/src/json.rl"
+#line 39 "/home/matiu/projects/json++11/src/json.rl"
 
 
 /// Allows lazy evaluation of number types
@@ -69,41 +67,49 @@ public:
     operator unsigned char() { return value<unsigned char>(); }
 };
 
-class JSONParser;
-
+/// tparam P the JSONParser specialization that we refer to
+template <typename P>
 class JSONParserError : public std::runtime_error {
+public:
+    using T = typename P::iterator;
 private:
-    const JSONParser* _parser;
-    const char* _location;
+    const P* _parser;
+    T _location;
     std::string _msg;
-    std::string make_msg(const char* location, const std::string& msg) {
-        return msg + " at " + location;
+    std::string make_msg(T, const std::string& msg) {
+        //return msg + " at " + location;
+        return msg; // TODO: Show the location .. it works with char* .. but not with istream_iterator. We should probably return a line number and character number.
     }
 public:
-    JSONParserError(const JSONParser* parser, const char* location, const std::string& msg) :
+    JSONParserError(const P* parser, T location, const std::string& msg) :
         std::runtime_error(make_msg(location, msg)),
         _parser(parser),
         _location(location),
         _msg(msg) { }
-    const JSONParser* parser() const { return _parser; }
-    const char* location() const { return _location; }
+    const P* parser() const { return _parser; }
+    T location() const { return _location; }
     const std::string& msg() const { return _msg; }
 };
 
+/** tparam An iterator that returns chars **/
+template <typename T=const char*>
 class JSONParser {
 public:
     enum JSONType { null='n', boolean='t', array='[', object='{', number='0', string='"', HIT_END=0, ERROR='x' };
+    using MyType = JSONParser<T>;
+    using iterator = T;
+    using Error = JSONParserError<MyType>;
 private:
     // Ragel vars
-    const char *p;
-    const char *pe;
-    const char *eof;
+    T p;
+    T pe;
+    T eof;
     // Our vars
     bool skipOverErrors;
     
     /// Searches though whitespace for a '"' meaning the start of an attribute name
     void readAttributeStart() {
-        while ((p < pe) && (p < eof)) {
+        while ((p != pe) && (p != eof)) {
             switch (*p++) {
             case 9:
             case 10:
@@ -113,43 +119,42 @@ private:
             case '"':
                 return;
             default:
-                throw JSONParserError(this, p, "Couldn't find '\"' to signify the start of an attribute value");
+                throw Error(this, p, "Couldn't find '\"' to signify the start of an attribute value");
             }
         }
-        throw JSONParserError(this, p, "hit end while looking for '\"' to signify the start of an attribute value");
+        throw Error(this, p, "hit end while looking for '\"' to signify the start of an attribute value");
     }
 
     /**
-    * If 'skipOverErrors' is false, throws a JSONParserError, otherwise just returns.
-    * Context is automatically passed to the JSONParserError object.
+    * If 'skipOverErrors' is false, throws a Error, otherwise just returns.
+    * Context is automatically passed to the Error object.
     *
     * @param message The error message to show
     */
     void handleError(const std::string& message) {
         if (skipOverErrors) {
             // Skip Forward until we find a new type
-            while (p < pe) {
+            while (p != pe) {
                 switch (getNextType(true)) {
                     case number:
-                        --p; // Put the read cursor in the right position to read the number
                         return;
                     case ERROR:
                         ++p;
                         continue;
                     case HIT_END:
                         // We have to raise an error here. There's no way we can skip forward anymore
-                        throw JSONParserError(this, p, std::string("Hit end: ") + message);
+                        throw Error(this, p, std::string("Hit end: ") + message);
                     default:
                         return;
                 }
             }
         } else
-            throw JSONParserError(this, p, message);
+            throw Error(this, p, message);
     }
 
     /**
     * Tests a null terminated C string. If we reach the null char .. just returns.
-    * If something doesn't match, it throws the JSONParserError.
+    * If something doesn't match, it throws the Error.
     *
     * @param test A null terminated C string to compare 'p' against.
     */
@@ -183,10 +188,7 @@ private:
 
 public:
     /// @param json - KEEP THIS STRING ALIVE .. WE DONT COPY IT .. WE USE IT .. You can't just call it with an ("inplace string")
-    JSONParser(const std::string& json, bool skipOverErrors=false) :
-        p(json.c_str()), pe(p+json.length()), eof(pe), skipOverErrors(skipOverErrors) {}
-    /// @param json - KEEP THIS STRING ALIVE .. WE DONT COPY IT .. WE USE IT .. You can't just call it with an ("inplace string")
-    JSONParser(const char* json, const char* end, bool skipOverErrors=false) :
+    JSONParser(T json, T end, bool skipOverErrors=false) :
         p(json), pe(end), eof(pe), skipOverErrors(skipOverErrors) {}
     JSONParser(JSONParser&& original, bool skipOverErrors=false) :
         p(original.p), pe(original.pe), eof(original.eof), skipOverErrors(skipOverErrors) {}
@@ -195,45 +197,56 @@ public:
     * Eats whitespace, then tells you the next type found in the JSON stream.
     * It eats the first letter for all types except number.
     *
-    * @param returnError defaults to False .. true is used internally by 'handleError'
+    * @param returnError defaults to False .. true is used internally when getNextType() is called by handleError()
+    *                    Causes the func to return the ERROR or HIT_END JSONTypes instead of throwing an exception on syntax errors or hitting the end of the stream
+    * 
+    * # Matrix of parameter values for returnErrors and ::skipOverErrors
+    *
     *    returnError - skipOverErrors - behaviour on syntax error - on end of stream
     *      true      -   true         - returns ERROR             - returns HIT_END
     *      true      -   false        - returns ERROR             - returns HIT_END
     *      false     -   true         - skips forward until next type and returns that - returns HIT_END
-    *      false     -   false        - throws JSONParserError    - throws JSONParserError
+    *      false     -   false        - throws Error              - throws Error
     *
     * @return the 'JSONType' found,
     */
     JSONType getNextType(bool returnError=false) {
-        while ((p < pe) && (p < eof)) {
-            switch( (*p++) ) {
+        while ((p != pe) && (p != eof)) {
+            switch( (*p) ) {
                 case 9: case 10: case 13:
                 case ' ':
+                    ++p;
                     continue;
-                case '"': return string;
+                case '"':
+                    ++p;
+                    return string;
                 case '-': case '0': case '1': case '2': case '3': case '4':
                 case '5': case '6': case '7': case '8': case '9': {
-                    --p;
                     return number;
                 }
-                case '[': return array;
-                case 'f': return boolean;
-                case 'n': return null;
-                case 't': return boolean;
-                case '{': return object;
-                default:
-                    break;
+                case '[': ++p; return array;
+                case 'f': ++p; return boolean;
+                case 'n': ++p; return null;
+                case 't': ++p; return boolean;
+                case '{': ++p; return object;
+                default: {
+                    // If we got here, it's because we hit the end of the stream, or found an unexpected character in the json stream;
+                    if (returnError)
+                        // If we are returning error status instead of throwing exceptions
+                        // If we hit the end return HIT_END
+                        return ERROR;
+                    else {
+                        // If we're not returning errors, either log it then try again, or throw an exception and abort
+                        handleError("Couldn't Identify next JSON Type"); // Either logs or throws
+                        ++p; // Carry on searching
+                    }
+                }
             }
         }
-        if ((p >= pe) || (p >= eof)) {
-            returnError = true;
-        }
-        if (returnError)
-            return p < pe ? ERROR : HIT_END;
-        else {
-            handleError("Couldn't Identify next JSON Type");
-            return getNextType(returnError);
-        }
+        // We hit the end of the stream
+        if (!returnError)
+            handleError("Hit end of stream while trying to identify next JSON type"); // Either logs or throws
+        return HIT_END; // We have to return something .. even if returnError is false
     }
 
     void readNull() { checkStaticString("ull"); }
@@ -268,8 +281,8 @@ public:
     *
     * @return The value of the number we read
     */
-    template <typename T=double>
-    T readNumber() {
+    template <typename N=double>
+    N readNumber() {
         bool intIsNeg=false; // true if the int part is negative
         bool expIsNeg=false; // true if the exponent part is negative
         unsigned long long intPart=0; // The integer part of the number
@@ -281,16 +294,16 @@ public:
             return JSONNumberInfo(intIsNeg, intPart, expPart);
         };
         
-#line 293 "/home/matiu/projects/json++11/src/json.rl"
+#line 306 "/home/matiu/projects/json++11/src/json.rl"
         int startState = 
             
-#line 288 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 301 "/home/matiu/projects/json++11/src/parser.hpp"
 1
-#line 295 "/home/matiu/projects/json++11/src/json.rl"
+#line 308 "/home/matiu/projects/json++11/src/json.rl"
         ;
         int cs = startState; // Current state
         
-#line 294 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 307 "/home/matiu/projects/json++11/src/parser.hpp"
 	{
 	if ( p == pe )
 		goto _test_eof;
@@ -318,7 +331,7 @@ st2:
 	if ( ++p == pe )
 		goto _test_eof2;
 case 2:
-#line 322 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 335 "/home/matiu/projects/json++11/src/parser.hpp"
 	if ( 48 <= (*p) && (*p) <= 57 )
 		goto tr2;
 	goto st0;
@@ -337,7 +350,7 @@ st6:
 	if ( ++p == pe )
 		goto _test_eof6;
 case 6:
-#line 341 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 354 "/home/matiu/projects/json++11/src/parser.hpp"
 	switch( (*p) ) {
 		case 46: goto st3;
 		case 69: goto st4;
@@ -368,7 +381,7 @@ st7:
 	if ( ++p == pe )
 		goto _test_eof7;
 case 7:
-#line 372 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 385 "/home/matiu/projects/json++11/src/parser.hpp"
 	switch( (*p) ) {
 		case 69: goto st4;
 		case 101: goto st4;
@@ -401,7 +414,7 @@ st5:
 	if ( ++p == pe )
 		goto _test_eof5;
 case 5:
-#line 405 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 418 "/home/matiu/projects/json++11/src/parser.hpp"
 	if ( 48 <= (*p) && (*p) <= 57 )
 		goto tr5;
 	goto st0;
@@ -419,7 +432,7 @@ st8:
 	if ( ++p == pe )
 		goto _test_eof8;
 case 8:
-#line 423 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 436 "/home/matiu/projects/json++11/src/parser.hpp"
 	if ( 48 <= (*p) && (*p) <= 57 )
 		goto tr5;
 	goto st0;
@@ -447,38 +460,38 @@ case 8:
         return makeJSONNumber();
     }
 	break;
-#line 451 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 464 "/home/matiu/projects/json++11/src/parser.hpp"
 	}
 	}
 
 	_out: {}
 	}
 
-#line 299 "/home/matiu/projects/json++11/src/json.rl"
+#line 312 "/home/matiu/projects/json++11/src/json.rl"
 
         // The state machine returns, so the code will only get here if it can't parse the string
         if (gotAtLeastOneDigit)
             return makeJSONNumber();
         else
             handleError("Couldn't read a number");
-        return T();
+        return N();
     }
 
     std::string readString() {
         
-#line 310 "/home/matiu/projects/json++11/src/json.rl"
+#line 323 "/home/matiu/projects/json++11/src/json.rl"
         int startState = 
             
-#line 473 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 486 "/home/matiu/projects/json++11/src/parser.hpp"
 1
-#line 312 "/home/matiu/projects/json++11/src/json.rl"
+#line 325 "/home/matiu/projects/json++11/src/json.rl"
         ;
         int cs = startState; // Current state
         wchar_t uniChar = 0;
         int uniCharBytes = 0;
         std::string output;
         
-#line 482 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 495 "/home/matiu/projects/json++11/src/parser.hpp"
 	{
 	if ( p == pe )
 		goto _test_eof;
@@ -554,7 +567,7 @@ st1:
 	if ( ++p == pe )
 		goto _test_eof1;
 case 1:
-#line 558 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 571 "/home/matiu/projects/json++11/src/parser.hpp"
 	switch( (*p) ) {
 		case 34: goto tr1;
 		case 92: goto st2;
@@ -616,7 +629,7 @@ st5:
 	if ( ++p == pe )
 		goto _test_eof5;
 case 5:
-#line 620 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 633 "/home/matiu/projects/json++11/src/parser.hpp"
 	goto st0;
 st0:
 cs = 0;
@@ -665,7 +678,7 @@ st2:
 	if ( ++p == pe )
 		goto _test_eof2;
 case 2:
-#line 669 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 682 "/home/matiu/projects/json++11/src/parser.hpp"
 	switch( (*p) ) {
 		case 98: goto tr3;
 		case 102: goto tr4;
@@ -686,7 +699,7 @@ st3:
 	if ( ++p == pe )
 		goto _test_eof3;
 case 3:
-#line 690 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 703 "/home/matiu/projects/json++11/src/parser.hpp"
 	if ( (*p) < 65 ) {
 		if ( 48 <= (*p) && (*p) <= 57 )
 			goto tr9;
@@ -715,7 +728,7 @@ st4:
 	if ( ++p == pe )
 		goto _test_eof4;
 case 4:
-#line 719 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 732 "/home/matiu/projects/json++11/src/parser.hpp"
 	switch( (*p) ) {
 		case 34: goto tr12;
 		case 92: goto tr13;
@@ -740,7 +753,7 @@ case 4:
 	_out: {}
 	}
 
-#line 319 "/home/matiu/projects/json++11/src/json.rl"
+#line 332 "/home/matiu/projects/json++11/src/json.rl"
 
         // The state machine returns, so the code will only get here if it can't parse the string
         handleError("Couldn't read a string");
@@ -811,19 +824,21 @@ case 4:
     */
     template <char end, char separator=','>
     bool doIHaveMore() {
-        while ((p < pe) && (p < eof)) {
-            switch (*p++) {
+        while ((p != pe) && (p != eof)) {
+            switch (*p) {
             case 9:
             case 10:
             case 13:
             case ' ':
+                ++p;
                 continue;
             case separator:
+                ++p;
                 return true;
             case end:
+                ++p;
                 return false;
             default:
-                --p;
                 return true;
             }
         }
@@ -841,7 +856,7 @@ case 4:
     }
 
     /// Returns the pointer to the json we are parsing
-    const char* json() const { return p; }
+    T json() const { return p; }
 
     /// This is the type you can pass to 'readObject'
     using Reader = std::function<void()>;
@@ -883,7 +898,7 @@ case 4:
                        << expectedType
                        << "but got one of type "
                        << nextTokenType;
-                throw JSONParserError(this, p, errMsg.str());
+                throw Error(this, p, errMsg.str());
             }
             reader(); // Actually read in the value to the person object
             ++attrsRead;
@@ -892,6 +907,4 @@ case 4:
     }
 };
 
-} // namespace yajp
-
-#endif // YAJP_JSON_HPP
+} // namespace json

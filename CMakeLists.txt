@@ -4,6 +4,14 @@ cmake_minimum_required(VERSION 2.8)
 
 add_definitions( -std=c++11 -Wall -Wextra )
 
+include(cmake/get_bandit.cmake)
+
 enable_testing()
 
 add_subdirectory(src)
+
+# All tests go here
+#add_definitions( -fno-access-control ) # Allow access to private members for tests
+include_directories(${BANDIT_INCLUDE_DIR})
+add_executable(tests tests.cpp)
+add_test(tests tests)
