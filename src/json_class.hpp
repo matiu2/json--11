@@ -158,18 +158,18 @@ std::ostream& operator <<(ostream& s, const JSON& j) {
         case JSON::null: s << "null"; break;
         case JSON::boolean: s << (j.value.as_bool ? "true" : "false"); break;
         case JSON::number: s << j.value.as_num; break;
-        case JSON::text: s << utf82json(j.value.as_string); break;
+        case JSON::text: s << '"' << utf82json(j.value.as_string) << '"'; break;
         case JSON::map: {
             s << '{';
             auto entry = j.value.as_map.cbegin();
             auto end = j.value.as_map.cend();
             --end; // Second to last one so that we don't put a comma after the last one
             while (entry != end) {
-                s << utf82json(entry->first) << ':' << entry->second << ',';
+                s << '"' << utf82json(entry->first) << R"(":)" << entry->second << ',';
                 ++entry;
             }
             // The last entry in the map doesn't have a comma after it
-            s << utf82json(entry->first) << ':' << entry->second;
+            s << '"' << utf82json(entry->first) << R"(":)" << entry->second;
             s << '}';
             break;
         }
