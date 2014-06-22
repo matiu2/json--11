@@ -44,6 +44,13 @@ go_bandit([](){
             AssertThat(j.whatIs(), Equals(JSON::text));
             AssertThat((const std::string&)j, Equals("Hello there"));
         });
+        it("1.7. Reads in UTF8", [](){
+            constexpr const char* s = u8"ᚠᛇᚻ᛫ᛒᛦᚦ᛫ᚠᚱᚩᚠᚢᚱ᛫ᚠᛁᚱᚪ᛫ᚷᛖᚻᚹᛦᛚᚳᚢᛗ";
+            JSON j(s);
+            AssertThat(j.isNull(), Equals(false));
+            AssertThat(j.whatIs(), Equals(JSON::text));
+            AssertThat((const std::string&)j, Equals(s));
+        });
     });
 });
 
