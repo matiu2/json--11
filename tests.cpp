@@ -51,6 +51,13 @@ go_bandit([](){
             AssertThat(j.whatIs(), Equals(JSON::text));
             AssertThat((const std::string&)j, Equals(s));
         });
+        it("1.8. Reads in a list", [](){
+            JSON j(JList{{}, {"String"}, {4.0}});
+            AssertThat(j.isNull(), Equals(false));
+            AssertThat(j.whatIs(), Equals(JSON::list));
+            const JList& output = j;
+            AssertThat(output, HasLength(3));
+        });
     });
 });
 
