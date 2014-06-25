@@ -8,17 +8,17 @@
 
 namespace json {
 
-JSON read(std::istream& in, bool skipOverErrors=false) {
-    using Iterator = std::istream_iterator<char>;
-    Iterator begin(in);
-    Iterator end;
-    JSONParser<Iterator> p(begin, end, skipOverErrors);
-    return read(p);
+JSON read(std::istream &in, bool skipOverErrors = false) {
+  using Iterator = std::istream_iterator<char>;
+  Iterator begin(in);
+  Iterator end;
+  JSONParser<Iterator> p(begin, end, skipOverErrors);
+  return read(p);
 }
 
-JSON read(const std::string& in, bool skipOverErrors=false) {
-    JSONParser<std::string::const_iterator> p(in.cbegin(), in.cend(), skipOverErrors);
-    return read(p);
+JSON read(const std::string &in, bool skipOverErrors = false) {
+  JSONParser<std::string::const_iterator> p(in.cbegin(), in.cend(),
+                                            skipOverErrors);
+  return read(p);
 }
-
 }
