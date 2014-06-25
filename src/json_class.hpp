@@ -36,7 +36,7 @@ private:
         Value (JList val) { new (&as_list) JList(val); }
         ~Value () {}
     } value;
-    void cleanup() {
+    void cleanup() noexcept {
         switch (type) {
             case null: 
             case boolean: 
@@ -74,9 +74,15 @@ private:
             case null: value.as_num = 0; break;
             case boolean: value.as_bool = other.value.as_bool; break;
             case number: value.as_num = other.value.as_num; break;
-            case text: value.as_string = other.value.as_string; break;
-            case map: value.as_map = other.value.as_map; break;
-            case list: value.as_list = other.value.as_list; break;
+            case text:
+                new (&value.as_string) std::string(std::move(other.value.as_string));
+                break;
+            case map:
+                new (&value.as_map) JMap(std::move(other.value.as_map));
+                break;
+            case list:
+                new (&value.as_list) JList(std::move(other.value.as_list));
+                break;
         }
         other.cleanup();
     }
@@ -88,8 +94,8 @@ public:
     JSON(std::string val) : type(text), value{val} {}
     JSON(JMap val) : type(map), value{val} {}
     JSON(JList val) : type(list), value{val} {}
-    JSON(const JSON& other) { copyFromOther(other); }
-    JSON(JSON&& other) { moveFromOther(std::move(other)); };
+    JSON(const JSON& other) : type(null) { copyFromOther(other); }
+    JSON(JSON&& other) noexcept : type(null) { moveFromOther(std::move(other)); };
     ~JSON() { cleanup(); }
     Type whatIs() const { return type; }
     JSON& operator=(const JSON& other) {

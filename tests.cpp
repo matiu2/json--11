@@ -9,7 +9,7 @@ using namespace bandit;
 using namespace json;
 
 go_bandit([](){
-    describe("Basic JSON", [](){
+    describe("JSON Generation", [](){
         std::stringstream json;
         before_each([&](){ json.str(""); });
         it("1.1. Can be null", [&](){
