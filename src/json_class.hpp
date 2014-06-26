@@ -107,16 +107,16 @@ public:
         return *this;
     }
     /// Render as number
-    operator long double() {
+    operator long double() const {
         assert(type == number);
         return value.as_num;
     }
     /// Render as an integer
-    operator long long () {
+    operator long long () const {
         assert(type == number);
         return value.as_num;
     }
-    operator int () {
+    operator int () const {
         assert(type == number);
         return value.as_num;
     }

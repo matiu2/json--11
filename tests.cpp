@@ -28,7 +28,7 @@ go_bandit([]() {
       JSON j = JBool(true);
       AssertThat(j.isNull(), Equals(false));
       AssertThat(j.whatIs(), Equals(JSON::boolean));
-      AssertThat(j, Equals(true));
+      AssertThat((bool)j, Equals(true));
       output << j;
       AssertThat(output.str(), Equals("true"));
     });
@@ -37,7 +37,7 @@ go_bandit([]() {
       JSON j = JBool(false);
       AssertThat(j.isNull(), Equals(false));
       AssertThat(j.whatIs(), Equals(JSON::boolean));
-      AssertThat(j, Equals(false));
+      AssertThat((bool)j, Equals(false));
       output << j;
       AssertThat(output.str(), Equals("false"));
     });
@@ -133,7 +133,7 @@ go_bandit([]() {
       JSON j = read("true");
       AssertThat(j.isNull(), Equals(false));
       AssertThat(j.whatIs(), Equals(JSON::boolean));
-      AssertThat(j, Equals(true));
+      AssertThat((bool)j, Equals(true));
       output << j;
       AssertThat(output.str(), Equals("true"));
     });
@@ -142,7 +142,7 @@ go_bandit([]() {
       JSON j = read("false");
       AssertThat(j.isNull(), Equals(false));
       AssertThat(j.whatIs(), Equals(JSON::boolean));
-      AssertThat(j, Equals(false));
+      AssertThat((bool)j, Equals(false));
       output << j;
       AssertThat(output.str(), Equals("false"));
     });
@@ -165,14 +165,27 @@ go_bandit([]() {
       AssertThat(output.str(), Equals("-15"));
     });
 
-    it("2.5. Parses a negative int", [&]() {
-      JSON j = read("-200000.45");
+    it("2.6. Parses a negative double", [&]() {
+      JSON j = read("-12345.67");
       AssertThat(j.isNull(), Equals(false));
       AssertThat(j.whatIs(), Equals(JSON::number));
-      AssertThat(j, Equals(-200000.45));
+      AssertThat((long double)j, Is().EqualToWithDelta(-12345.67, 0.01));
+      output.precision(7);
       output << j;
-      AssertThat(output.str(), Equals("-200000.45"));
+      AssertThat(output.str(), Equals("-12345.67"));
     });
+
+    it("2.7. Parses an exponent", [&]() {
+      JSON j = read("-1234567e-2");
+      AssertThat(j.isNull(), Equals(false));
+      AssertThat(j.whatIs(), Equals(JSON::number));
+      AssertThat((long double)j, Is().EqualToWithDelta(-12345.67, 0.01));
+      output.precision(7);
+      output << j;
+      AssertThat(output.str(), Equals("-12345.67"));
+    });
+
+
 
   });
 
