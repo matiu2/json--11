@@ -26,6 +26,8 @@ void hex(T number, OutIterator& out) {
       if (work == 0) {
         continue;
       } else {
+        if (shift % 8 == 0)
+          *out++ = '0'; // Output one leading zero if we're going to an odd number of hex values
         stillZero = false;
       }
     }

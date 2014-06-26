@@ -185,6 +185,23 @@ go_bandit([]() {
       AssertThat(output.str(), Equals("-12345.67"));
     });
 
+    it("2.8. Parses a utf8 string", [&]() {
+      std::string input(
+          R"("\u05D0\u05E0\u05D9 \u05D9\u05DB\u05D5\u05DC )"
+          R"(\u05DC\u05D0\u05DB\u05D5\u05DC )"
+          R"(\u05D6\u05DB\u05D5\u05DB\u05D9\u05EA \u05D5\u05D6\u05D4 )"
+          R"(\u05DC\u05D0 \u05DE\u05D6\u05D9\u05E7 \u05DC\u05D9")");
+      std::string decoded("אני יכול לאכול זכוכית וזה לא מזיק לי");
+      JSON j = read(input);
+      AssertThat(j.isNull(), Equals(false));
+      AssertThat(j.whatIs(), Equals(JSON::text));
+      AssertThat((const std::string &)j, Equals(decoded));
+      // It should output exactly as it read
+      output << j;
+      AssertThat(output.str(), Equals(input));
+    });
+
+
 
 
   });
