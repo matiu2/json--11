@@ -147,6 +147,15 @@ go_bandit([]() {
       AssertThat(output.str(), Equals("false"));
     });
 
+    it("2.4. Parses a simple int", [&]() {
+      JSON j = read("5");
+      AssertThat(j.isNull(), Equals(false));
+      AssertThat(j.whatIs(), Equals(JSON::number));
+      AssertThat((int)j, Equals(5));
+      output << j;
+      AssertThat(output.str(), Equals("5"));
+    });
+
   });
 
 });
