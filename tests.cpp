@@ -156,6 +156,15 @@ go_bandit([]() {
       AssertThat(output.str(), Equals("5"));
     });
 
+    it("2.5. Parses a negative int", [&]() {
+      JSON j = read("-15");
+      AssertThat(j.isNull(), Equals(false));
+      AssertThat(j.whatIs(), Equals(JSON::number));
+      AssertThat((int)j, Equals(-15));
+      output << j;
+      AssertThat(output.str(), Equals("-15"));
+    });
+
   });
 
 });
