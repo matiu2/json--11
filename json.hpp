@@ -10,9 +10,7 @@ namespace json {
 
 JSON read(std::istream &in, bool skipOverErrors = false) {
   using Iterator = std::istream_iterator<char>;
-  Iterator begin(in);
-  Iterator end;
-  JSONParser<Iterator> p(begin, end, skipOverErrors);
+  JSONParser<Iterator> p(Iterator(in), Iterator(), skipOverErrors);
   return read(p);
 }
 

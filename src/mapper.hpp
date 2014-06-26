@@ -12,7 +12,7 @@ JSON read(JSONParser<T>& parser) {
     case JSONParser<T>::null:
       return {};
     case JSONParser<T>::boolean:
-      return parser.readBoolean();
+      return JSON(parser.readBoolean(), 1);
     case JSONParser<T>::array: {
       JList contents;
       while (parser.doIHaveMoreArray()) contents.push_back(read(parser));

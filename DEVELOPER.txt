@@ -1,3 +1,7 @@
 Using clang tools to track errors
 
+# Different flags for building with clang
+
+## Memory and use of uninitialized values
+
  CMAKE_CXX_FLAGS_DEBUG            -fsanitize=memory -fsanitize-memory-track-origins -fno-omit-frame-pointer -g -O0                                                                                                                                                                         
