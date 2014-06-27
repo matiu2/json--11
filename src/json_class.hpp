@@ -70,6 +70,7 @@ private:
     }
     void moveFromOther(JSON&& other) {
         cleanup();
+        type = other.type;
         switch (other.type) {
             case null: value.as_num = 0; break;
             case boolean: value.as_bool = other.value.as_bool; break;

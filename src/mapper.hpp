@@ -15,7 +15,8 @@ JSON read(JSONParser<T>& parser) {
       return JSON(parser.readBoolean(), 1);
     case JSONParser<T>::array: {
       JList contents;
-      while (parser.doIHaveMoreArray()) contents.push_back(read(parser));
+      while (parser.doIHaveMoreArray())
+        contents.push_back(read(parser));
       return contents;
     }
     case JSONParser<T>::object: {
@@ -29,7 +30,7 @@ JSON read(JSONParser<T>& parser) {
     case JSONParser<T>::number:
       return parser.readNumber();
     case JSONParser<T>::string:
-      return parser.readString();
+      return JSON(parser.readString());
     case JSONParser<T>::HIT_END:
     case JSONParser<T>::ERROR:
     default:

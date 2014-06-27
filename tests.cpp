@@ -200,6 +200,16 @@ go_bandit([]() {
       AssertThat(output.str(), Equals(input));
     });
 
+    it("2.9. Parses a list", [&]() {
+      JSON j = read(R"xxx(["a", 1, 2.4, ["another", "list"], "12"])xxx");
+      AssertThat(j.isNull(), Equals(false));
+      AssertThat(j.whatIs(), Equals(JSON::list));
+      const JList& l = j;
+      auto i = l.cbegin();
+      const JSON& a = *i;
+      AssertThat(a.whatIs(), Equals(JSON::text));
+      AssertThat((const std::string&)*i, Equals("a"));
+    });
 
   });
 
