@@ -14,6 +14,7 @@ namespace json {
 struct JSON;
 
 using JList = std::vector<JSON>;
+using JEntry = std::pair<std::string, JSON>;
 using JMap = std::map<std::string, JSON>;
 
 struct JSON {

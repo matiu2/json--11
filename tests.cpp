@@ -204,26 +204,27 @@ go_bandit([]() {
       JSON j = read(R"xxx(["a", 1, 2.4, ["another", "list"], "12"])xxx");
       AssertThat(j.isNull(), Equals(false));
       AssertThat(j.whatIs(), Equals(JSON::list));
-      const JList& l = j;
+      const JList &l = j;
       auto i = l.cbegin();
-      const JSON& a = *i;
+      const JSON &a = *i;
       // Examine the elements
       AssertThat(a.whatIs(), Equals(JSON::text));
-      AssertThat((const std::string&)*i, Equals("a"));
+      AssertThat((const std::string &)*i, Equals("a"));
       AssertThat((int)*++i, Equals(1));
       AssertThat((long double)*++i, EqualsWithDelta(2.4, 0.01));
       // Examine the inner list
-      const JList& l2 = *++i;
+      const JList &l2 = *++i;
       auto i2 = l2.cbegin();
-      AssertThat((const std::string&)*i2++, Equals("another"));
-      AssertThat((const std::string&)*i2++, Equals("list"));
-      AssertThat(i2, Equals(l2.cend()))
+      AssertThat((const std::string &)*i2++, Equals("another"));
+      AssertThat((const std::string &)*i2++, Equals("list"));
+      AssertThat(i2, Equals(l2.cend()));
       // The last element is a string, not a number
       AssertThat((++i)->whatIs(), Equals(JSON::text));
-      AssertThat((const std::string&)*i, Equals("12"));
+      AssertThat((const std::string &)*i, Equals("12"));
       // Print out the JSON again
       output << j;
-      AssertThat(output.str(), Equals(R"xxx(["a",1,2.4,["another","list"],"12"])xxx"));
+      AssertThat(output.str(),
+                 Equals(R"xxx(["a",1,2.4,["another","list"],"12"])xxx"));
     });
 
   });
