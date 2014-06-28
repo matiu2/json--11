@@ -10,6 +10,11 @@ enable_testing()
 
 add_subdirectory(src)
 
+option(LOCATIONS "Provide a row+col location when a parsing error is hit" true)
+if(LOCATIONS)
+  add_definitions(-DLOCATIONS)
+endif()
+
 # All tests go here
 #add_definitions( -fno-access-control ) # Allow access to private members for tests
 include_directories(${BANDIT_INCLUDE_DIR})

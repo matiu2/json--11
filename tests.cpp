@@ -227,6 +227,28 @@ go_bandit([]() {
                  Equals(R"xxx(["a",1,2.4,["another","list"],"12"])xxx"));
     });
 
+    it("2.10. Parses a map", [&]() {
+      std::string json(R"xxx({"Name": "Human", "Weapons": ["Teeth", "Bony )xxx"
+                       R"xxx(Forehead", "Hands", "Feet"], "Traits": )xxx"
+                       R"xxx({"Strength": 4, "Intelligence": 2}})xxx");
+      JSON j = read(json);
+      AssertThat(j.isNull(), Equals(false));
+      AssertThat(j.whatIs(), Equals(JSON::map));
+      const JMap &data = j;
+      const JMap::mapped_type& name = data.at("Name");
+      // Name: Human
+      AssertThat((const std::string &)name, Equals("Human"));
+      // Weapons: ["Teeth", "Bony Forehead", "Hands", "Feet"]
+      const auto& weapons = data.at("Weapons");
+      std::vector<std::string> expectedWeapons{"Teeth", "Bony Forehead", "Hands", "Feet"};
+      const JList& actualWeapons(weapons);
+      AssertThat(actualWeapons, EqualsContainer(expectedWeapons));
+      // Traits
+      const JMap& traits = data.at("Traits");
+      AssertThat((int)traits.at("Strength"), Equals(4));
+      AssertThat((int)traits.at("Intelligence"), Equals(2));
+    });
+
   });
 
 });
