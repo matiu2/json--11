@@ -289,6 +289,20 @@ go_bandit([]() {
       output << j;
       AssertThat(output.str(), Equals("1.2"));
     });
+
+    it("2.14. bad map", [&]() {
+      std::string json(R"XXX({)XXX");
+      using Error = JSONParser<std::string::const_iterator>::Error;
+      AssertThrows(Error, read(json));
+#ifndef NO_LOCATIONS
+      AssertThat(
+          LastException<Error>().what(),
+          Equals(
+              R"(hit end while looking for '"' to signify the start of an attribute value at row 1 col 2)"));
+      AssertThat(LastException<Error>().row, Equals(1));
+      AssertThat(LastException<Error>().col, Equals(2));
+#endif
+    });
   });
 });
 
