@@ -15,16 +15,17 @@ JSON read(JSONParser<T>& parser) {
       return JSON(parser.readBoolean(), 1);
     case JSONParser<T>::array: {
       JList contents;
-      while (parser.doIHaveMoreArray())
+      do
         contents.push_back(read(parser));
+      while (parser.doIHaveMoreArray());
       return contents;
     }
     case JSONParser<T>::object: {
       JMap contents;
-      while (parser.doIHaveMoreObject()) {
+      do {
         std::string attrName = parser.readNextAttribute();
         contents.insert({attrName, std::move(read(parser))});
-      }
+      } while (parser.doIHaveMoreObject());
       return contents;
     }
     case JSONParser<T>::number:

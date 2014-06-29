@@ -446,15 +446,15 @@ public:
       readBoolean();
       return;
     case JSONParser::array:
-      while (doIHaveMoreArray()) {
+      do {
         consumeOneValue();
-      }
+      } while (doIHaveMoreArray());
       return;
     case JSONParser::object:
-      while (doIHaveMoreObject()) {
+      do {
         readNextAttribute();
         consumeOneValue();
-      }
+      } while (doIHaveMoreObject());
       return;
     case JSONParser::number:
       readNumber<int>();
@@ -472,8 +472,12 @@ public:
   /**
   * Reads through whitespace, return true if it hits @a separator first, false
   * if it hits @a end first.
-  * If it hits anything other than these or whitespace, it return true and
-  * doesn't advance to the next char
+  * If it hits the separator, it consumes it, so you can readily read the next
+  * value.
+  *
+  * If it hits anything other than separator, whitespace, or end, it calls
+  * handleError and returns 'false' if not configured to throw exceptions.
+  * (see  handleError() for more info)
   *
   * @tparam end The character that means we hit the end, no more to come
   * @tparam separator The character that means we have more to come
@@ -482,23 +486,30 @@ public:
   *end
   */
   template <char end, char separator = ','> bool doIHaveMore() {
-    while ((p != pe) && (p != eof)) {
-      switch (*p) {
-      case 9:
-      case 10:
-      case 13:
-      case ' ':
-        ++p;
-        continue;
-      case separator:
-        ++p;
-        return true;
-      case end:
-        ++p;
-        return false;
-      default:
-        return true;
+    struct BadChar {};
+    try {
+      while ((p != pe) && (p != eof)) {
+        switch (*p) {
+        case 9:
+        case 10:
+        case 13:
+        case ' ':
+          ++p;
+          continue;
+        case separator:
+          ++p;
+          return true;
+        case end:
+          ++p;
+          return false;
+        default:
+          throw BadChar();
+        }
       }
+    } catch (BadChar) {
+      handleError(std::string("Expected a '") + separator + "' or a '" + end +
+                  "' but hit a '" + *p + "' instead");
+      return false;
     }
     handleError(std::string("Expected a '") + separator + "' or a '" + end +
                 "' but hit the end of the input");

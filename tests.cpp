@@ -249,8 +249,15 @@ go_bandit([]() {
       AssertThat((int)traits.at("Intelligence"), Equals(2));
     });
 
+    it("2.11. Handle a simple parse error well", [&]() {
+      std::string json(R"XXX([1, 2, 3 4])XXX");
+      using Error = JSONParser<std::string::const_iterator>::Error;
+      AssertThrows(Error, read(json));
+      AssertThat(LastException<Error>().what(), Equals("Expected a ',' or a ']' but hit a '4' instead at row 1 col 10"));
+      AssertThat(LastException<Error>().row, Equals(1));
+      AssertThat(LastException<Error>().col, Equals(10));
+    });
   });
-
 });
 
 int main(int argc, char *argv[]) { return bandit::run(argc, argv); }
