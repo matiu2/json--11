@@ -249,13 +249,31 @@ go_bandit([]() {
       AssertThat((int)traits.at("Intelligence"), Equals(2));
     });
 
-    it("2.11. Handle a simple parse error well", [&]() {
+    it("2.11. Handle a missing comma in a list", [&]() {
       std::string json(R"XXX([1, 2, 3 4])XXX");
       using Error = JSONParser<std::string::const_iterator>::Error;
       AssertThrows(Error, read(json));
-      AssertThat(LastException<Error>().what(), Equals("Expected a ',' or a ']' but hit a '4' instead at row 1 col 10"));
+#ifndef NO_LOCATIONS
+      AssertThat(
+          LastException<Error>().what(),
+          Equals(
+              "Expected a ',' or a ']' but hit a '4' instead at row 1 col 10"));
       AssertThat(LastException<Error>().row, Equals(1));
       AssertThat(LastException<Error>().col, Equals(10));
+#endif
+    });
+    it("2.12. Handle a non closed list", [&]() {
+      std::string json(R"XXX([1, 2, 3)XXX");
+      using Error = JSONParser<std::string::const_iterator>::Error;
+      AssertThrows(Error, read(json));
+#ifndef NO_LOCATIONS
+      AssertThat(
+          LastException<Error>().what(),
+          Equals(
+              "Expected a ',' or a ']' but hit the end of the input at row 1 col 9"));
+      AssertThat(LastException<Error>().row, Equals(1));
+      AssertThat(LastException<Error>().col, Equals(9));
+#endif
     });
   });
 });
