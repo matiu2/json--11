@@ -63,6 +63,7 @@ class JSONNumberInfo {
   operator unsigned long long() { return value<unsigned long long>(); }
   operator float() { return value<float>(); }
   operator double() { return value<double>(); }
+  operator long double() { return value<long double>(); }
   operator short() { return value<short>(); }
   operator unsigned short() { return value<unsigned short>(); }
   operator char() { return value<char>(); }
@@ -370,7 +371,7 @@ public:
   *
   * @return The value of the number we read
   */
-  template <typename N = double> N readNumber() {
+  template <typename N = long double> N readNumber() {
     bool intIsNeg = false;          // true if the int part is negative
     bool expIsNeg = false;          // true if the exponent part is negative
     unsigned long long intPart = 0; // The integer part of the number
@@ -457,7 +458,7 @@ public:
       } while (doIHaveMoreObject());
       return;
     case JSONParser::number:
-      readNumber<int>();
+      readNumber<long double>();
       return;
     case JSONParser::string:
       readString();

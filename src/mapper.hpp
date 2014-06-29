@@ -1,7 +1,6 @@
+/** Maps the parsed values into json_class(s) **/
 #include "parser.hpp"
 #include "json_class.hpp"
-
-/** Uses the parser to create JSON classes **/
 
 namespace json {
 

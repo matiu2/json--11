@@ -262,6 +262,7 @@ go_bandit([]() {
       AssertThat(LastException<Error>().col, Equals(10));
 #endif
     });
+
     it("2.12. Handle a non closed list", [&]() {
       std::string json(R"XXX([1, 2, 3)XXX");
       using Error = JSONParser<std::string::const_iterator>::Error;
@@ -274,6 +275,19 @@ go_bandit([]() {
       AssertThat(LastException<Error>().row, Equals(1));
       AssertThat(LastException<Error>().col, Equals(9));
 #endif
+    });
+
+    it("2.13. Handle 2 decimal points", [&]() {
+      // Note: I'm not sure what the correct behaviour should be with this. As
+      // it is it reads 1.2, then hits the '.' and says, EOI because '.'s not
+      // part of number
+      std::string json(R"XXX(1.2.3.4)XXX");
+      JSON j = read(json);
+      AssertThat(j.isNull(), Equals(false));
+      AssertThat(j.whatIs(), Equals(JSON::number));
+      AssertThat((long double)j, EqualsWithDelta(1.2, 0.01));
+      output << j;
+      AssertThat(output.str(), Equals("1.2"));
     });
   });
 });
