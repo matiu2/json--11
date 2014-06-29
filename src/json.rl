@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-#ifdef LOCATIONS
+#ifndef NO_LOCATIONS
 #include "locatingIterator.hpp"
 #endif
 
@@ -74,7 +74,7 @@ template <typename P, typename T=typename P::iterator>
 class JSONParserError : public std::runtime_error {
 private:
   std::string make_msg(const std::string &msg, int row, int col) {
-#ifdef LOCATIONS
+#ifndef NO_LOCATIONS
     std::stringstream result;
     result << msg << " at row " << row << " col " << col;
     // return msg + " at " + location;
@@ -85,7 +85,7 @@ private:
   }
 
  public:
-#ifdef LOCATIONS
+#ifndef NO_LOCATIONS
    JSONParserError(const std::string &msg, int row, int col)
        : std::runtime_error(make_msg(msg, row, col)), row(row), col(col)  {}
   const int row;
@@ -112,13 +112,13 @@ public:
   using MyType = JSONParser<T>;
   using iterator = T;
   using Error = JSONParserError<MyType>;
-#ifdef LOCATIONS
+#ifndef NO_LOCATIONS
   friend class JSONParserError<MyType>;
 #endif
 
 private:
 // Ragel vars
-#ifdef LOCATIONS
+#ifndef NO_LOCATIONS
   LocatingIterator<T> p;
   LocatingIterator<T> pe;
   LocatingIterator<T> eof;
@@ -144,7 +144,7 @@ private:
       case c:
         return;
       default:
-#ifdef LOCATIONS
+#ifndef NO_LOCATIONS
         throw Error(
             std::string("Couldn't find '") + c + "' to signify the start of an attribute value",
             p.row, p.col);
@@ -154,7 +154,7 @@ private:
 #endif
       }
     }
-#ifdef LOCATIONS
+#ifndef NO_LOCATIONS
     throw Error(std::string("hit end while looking for '") + c + "' to signify the start of an "
                 "attribute value",
                 p.row, p.col);
@@ -183,7 +183,7 @@ private:
         case HIT_END:
           // We have to raise an error here. There's no way we can skip
           // forward anymore
-#ifdef LOCATIONS
+#ifndef NO_LOCATIONS
           throw Error(std::string("Hit end: ") + message, p.row, p.col);
 #else
           throw Error(std::string("Hit end: ") + message);
@@ -193,7 +193,7 @@ private:
         }
       }
     } else {
-#ifdef LOCATIONS
+#ifndef NO_LOCATIONS
       throw Error(message, p.row, p.col);
 #else
       throw Error(message);
@@ -555,7 +555,7 @@ public:
         errMsg << "When reading attribute " << nextAttrName
                << "I expected a value of type " << expectedType
                << "but got one of type " << nextTokenType;
-#ifdef LOCATIONS
+#ifndef NO_LOCATIONS
         throw Error(errMsg.str(), p.row, p.col);
 #else
         throw Error(errMsg.str());

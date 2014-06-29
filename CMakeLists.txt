@@ -11,8 +11,8 @@ enable_testing()
 add_subdirectory(src)
 
 option(LOCATIONS "Provide a row+col location when a parsing error is hit" true)
-if(LOCATIONS)
-  add_definitions(-DLOCATIONS)
+if(NOT LOCATIONS)
+  add_definitions(-DNO_LOCATIONS)
 endif()
 
 # All tests go here
