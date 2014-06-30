@@ -65,7 +65,7 @@ class JSONNumberInfo {
 template <typename P, typename T=typename P::iterator>
 class JSONParserError : public std::runtime_error {
 private:
-  std::string make_msg(const std::string &msg, int row, int col) {
+  static std::string make_msg(const std::string &msg, int row, int col) {
 #ifndef NO_LOCATIONS
     std::stringstream result;
     result << msg << " at row " << row << " col " << col;
