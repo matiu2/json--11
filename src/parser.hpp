@@ -951,7 +951,11 @@ case 4:
   bool doIHaveMoreObject() { return doIHaveMore<'}'>(); }
 
   /// Returns the pointer to the json we are parsing
+#ifndef NO_LOCATIONS
+  LocatingIterator<T> json() const { return p; }
+#else
   T json() const { return p; }
+#endif
 
   /// This is the type you can pass to 'readObject'
   using Reader = std::function<void()>;

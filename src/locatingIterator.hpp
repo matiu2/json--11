@@ -1,4 +1,5 @@
 /** An iterator wrapper that records a location in column and row coordinates */
+#pragma once
 
 namespace json {
 

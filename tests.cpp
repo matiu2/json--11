@@ -295,14 +295,28 @@ go_bandit([]() {
       using Error = JSONParser<std::string::const_iterator>::Error;
       AssertThrows(Error, read(json));
 #ifndef NO_LOCATIONS
-      AssertThat(
-          LastException<Error>().what(),
-          Equals(
-              R"(hit end while looking for '"' to signify the start of an attribute value at row 1 col 2)"));
+      AssertThat(LastException<Error>().what(),
+                 Equals(
+                     R"(hit end while looking for '"' to signify the start of )"
+                     R"(an attribute value at row 1 col 2)"));
       AssertThat(LastException<Error>().row, Equals(1));
       AssertThat(LastException<Error>().col, Equals(2));
 #endif
     });
+
+    it("2.15. Just plain bad", [&]() {
+      std::string json(R"XXX(aoeu)XXX");
+      using Error = JSONParser<std::string::const_iterator>::Error;
+      AssertThrows(Error, read(json));
+#ifndef NO_LOCATIONS
+      AssertThat(LastException<Error>().what(),
+                 Equals(
+                     R"(Couldn't Identify next JSON Type at row 1 col 1)"));
+      AssertThat(LastException<Error>().row, Equals(1));
+      AssertThat(LastException<Error>().col, Equals(1));
+#endif
+    });
+
   });
 });
 
