@@ -25,18 +25,15 @@ JSON read(const std::string &in, bool skipOverErrors = false) {
   return read(parser);
 }
 
-JSON read(const char *begin, const char *end, bool skipOverErrors = false) {
-  JSONParser<const char*> parser(begin, end, skipOverErrors);
+template<typename T>
+JSON read(T begin, T end, bool skipOverErrors = false) {
+  JSONParser<T> parser(begin, end, skipOverErrors);
   return read(parser);
 }
 
-using StreamIterator = std::istream_iterator<char>;
 #ifndef NO_LOCATIONS
+using StreamIterator=std::istream_iterator<char>;
 using LocStreamIterator = LocatingIterator<StreamIterator>;
-#else
-using LocStreamIterator = StreamIterator;
-#endif
-
 std::pair<JSON, LocStreamIterator> readWithPos(std::istream &in, bool skipOverErrors = false) {
   JSONParser<StreamIterator> parser(StreamIterator(in), StreamIterator(), skipOverErrors);
   JSON&& result(read(parser));
@@ -44,16 +41,21 @@ std::pair<JSON, LocStreamIterator> readWithPos(std::istream &in, bool skipOverEr
   return make_pair(result, p);
 }
 
-using StringIterator = std::string::const_iterator;
-#ifndef NO_LOCATIONS
-using LocStringIterator = LocatingIterator<StringIterator>;
-#else
-using LocStringIterator = StringIterator;
-#endif
-
-JSON readWithPos(const std::string &in, bool skipOverErrors = false) {
-  JSONParser<decltype(in.cbegin())> parser(in.cbegin(), in.cend(), skipOverErrors);
-  return read(parser);
+using LocStringIterator = LocatingIterator<std::string::const_iterator>;
+std::pair<JSON, LocStringIterator> readWithPos(const std::string &in, bool skipOverErrors = false) {
+  JSONParser<std::string::const_iterator> parser(in.cbegin(), in.cend(), skipOverErrors);
+  JSON&& result(read(parser));
+  auto p = parser.json();
+  return make_pair(result, p);
 }
+
+template<typename T>
+std::pair<JSON, LocatingIterator<T>>  readWithPos(T begin, T end, bool skipOverErrors = false) {
+  JSONParser<T> parser(begin, end, skipOverErrors);
+  JSON&& result(read(parser));
+  auto p = parser.json();
+  return make_pair(result, p);
+}
+#endif
 
 }

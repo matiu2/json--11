@@ -1,7 +1,58 @@
-Using clang tools to track errors
+# Developer / User documentation
 
-# Different flags for building with clang
+This is a the best c++11 JSON library that I know of. It does generation and parsing. It's all headers.
 
-## Memory and use of uninitialized values
+# To use in your project:
 
- CMAKE_CXX_FLAGS_DEBUG            -fsanitize=memory -fsanitize-memory-track-origins -fno-omit-frame-pointer -g -O0                                                                                                                                                                         
+Download these headers into your source:
+
+ * https://raw.githubusercontent.com/matiu2/json--11/master/src/json.hpp
+ * https://github.com/matiu2/json--11/raw/master/src/mapper.hpp
+ * https://github.com/matiu2/json--11/raw/master/src/parser.hpp
+
+# To use in a file:
+
+#include "json.hpp"
+
+# To generate json
+
+    using namespace json;
+
+    JSON j{
+        JMap{
+            {"name", "Mister Awesome"},
+            {"age", 40}
+            {"items", JList{
+                {"Hammer"}, {20.2}, {"Sword"}
+            }
+        }
+    };
+
+    std::cout << j;
+
+Will output something like:
+
+    {"name":"Mister Awesome","age":40,"items":["Hammer",20.2,"Sword"]}
+
+----
+
+# Parsing
+
+There several 'json::read' funcitions, for stream, string and other iterators:
+
+    JSON read(std::istream &in, bool skipOverErrors = false);
+    JSON read(const std::string &in, bool skipOverErrors = false);
+    template<typename T>
+    JSON read(T begin, T end, bool skipOverErrors = false) {
+
+Plus if you have locations turned on (default):
+
+    using StreamIterator=std::istream_iterator<char>;
+    using LocStreamIterator = LocatingIterator<StreamIterator>;
+    std::pair<JSON, LocStreamIterator> readWithPos(std::istream &in, bool skipOverErrors = false);
+
+    using LocStringIterator = LocatingIterator<std::string::const_iterator>;
+    std::pair<JSON, LocStringIterator> readWithPos(const std::string &in, bool skipOverErrors = false);
+
+    template<typename T>
+    std::pair<JSON, LocatingIterator<T>>  readWithPos(T begin, T end, bool skipOverErrors = false);
