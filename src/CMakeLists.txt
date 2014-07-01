@@ -36,3 +36,6 @@ add_custom_target(
     COMMAND ragel ${FSM_TYPE} "${CMAKE_CURRENT_SOURCE_DIR}/string_standalone.rl" -o "${CMAKE_CURRENT_SOURCE_DIR}/string.hpp"
     DEPENDS json.rl
 )
+
+add_executable(tests tests.cpp)
+add_test(tests tests)

@@ -1,11 +1,12 @@
 #pragma once
 
-#include "src/json_class.hpp"
-#include "src/mapper.hpp"
-#include "src/parser.hpp"
+#include "json_class.hpp"
+#include "mapper.hpp"
+#include "parser.hpp"
 #ifndef NO_LOCATIONS
-#include "src/locatingIterator.hpp"
+#include "locatingIterator.hpp"
 #endif
+
 #include <istream>
 #include <iterator>
 #include <algorithm>

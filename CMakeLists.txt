@@ -8,8 +8,6 @@ include(cmake/get_bandit.cmake)
 
 enable_testing()
 
-add_subdirectory(src)
-
 option(LOCATIONS "Provide a row+col location when a parsing error is hit" true)
 if(NOT LOCATIONS)
   add_definitions(-DNO_LOCATIONS)
@@ -18,5 +16,5 @@ endif()
 # All tests go here
 #add_definitions( -fno-access-control ) # Allow access to private members for tests
 include_directories(${BANDIT_INCLUDE_DIR})
-add_executable(tests tests.cpp)
-add_test(tests tests)
+
+add_subdirectory(src)
