@@ -342,7 +342,7 @@ go_bandit([]() {
         input << realJson;
         JSON json;
         input >> json;
-        std::string token = json["access"]["token"]["id"];
+        const std::string& token = json["access"]["token"]["id"];
         AssertThat(token, Equals("abcdxxxxxxxxxxxxxxxxxxxxxxxxxxxx"));
     });
   });
