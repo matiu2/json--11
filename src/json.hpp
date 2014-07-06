@@ -21,7 +21,7 @@ JSON read(std::istream &in, bool skipOverErrors = false) {
 }
 
 JSON read(const std::string &in, bool skipOverErrors = false) {
-  JSONParser<decltype(in.cbegin())> parser(in.cbegin(), in.cend(), skipOverErrors);
+  JSONParser<std::string::const_iterator> parser(in.cbegin(), in.cend(), skipOverErrors);
   return read(parser);
 }
 
@@ -29,6 +29,11 @@ template<typename T>
 JSON read(T begin, T end, bool skipOverErrors = false) {
   JSONParser<T> parser(begin, end, skipOverErrors);
   return read(parser);
+}
+
+istream& operator >>(istream& i, json::JSON& j) {
+  j = read(i);
+  return i;
 }
 
 #ifndef NO_LOCATIONS
@@ -57,5 +62,6 @@ std::pair<JSON, LocatingIterator<T>>  readWithPos(T begin, T end, bool skipOverE
   return make_pair(result, p);
 }
 #endif
+
 
 }

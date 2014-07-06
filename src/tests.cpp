@@ -4,6 +4,7 @@
 #include <sstream>
 
 #include "json.hpp"
+#include "test_input.hpp"
 
 using namespace bandit;
 using namespace json;
@@ -109,6 +110,25 @@ go_bandit([]() {
           Equals(R"({"Lot )"
                  R"(1":{"make":"hillman","model":"Hunter","year":1974},"Lot )"
                  R"(2":{"make":"porsche","model":"Cayenne","year":1982}})"));
+    });
+
+    it("1.10. Has map access", [&]() {
+      JSON j(JMap{{"Lot 1", JMap{{"make", {"hillman"}},
+                                 {"model", {"Hunter"}},
+                                 {"year", {1974}}}},
+                  {"Lot 2", JMap{{"make", {"porsche"}},
+                                 {"model", {"Cayenne"}},
+                                 {"year", {1982}}}}});
+      AssertThat(j.isNull(), Equals(false));
+      AssertThat(j.whatIs(), Equals(JSON::map));
+      JSON& lot1 = j.at("Lot 1");
+      AssertThat(lot1.whatIs(), Equals(JSON::map));
+      JSON& jyear = lot1.at("year");
+      // TODO: make a test that calls .at("Something that doesn't exist");
+      AssertThat(jyear.whatIs(), Equals(JSON::number));
+      int year = static_cast<int>(lot1["year"]);
+      AssertThat(year, Equals(1974));
+      AssertThat(static_cast<int>(j["Lot 1"]["year"]), Equals(1974));
     });
   });
 
@@ -317,6 +337,14 @@ go_bandit([]() {
 #endif
     });
 
+    it("3.1. Can parse from a stream, and has map access", [&]() {
+        std::stringstream input;
+        input << realJson;
+        JSON json;
+        input >> json;
+        std::string token = json["access"]["token"]["id"];
+        AssertThat(token, Equals("abcdxxxxxxxxxxxxxxxxxxxxxxxxxxxx"));
+    });
   });
 });
 

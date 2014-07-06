@@ -109,16 +109,16 @@ public:
         return *this;
     }
     /// Render as number
-    operator long double() const {
+    explicit operator long double() const {
         assert(type == number);
         return value.as_num;
     }
     /// Render as an integer
-    operator long long () const {
+    explicit operator long long () const {
         assert(type == number);
         return value.as_num;
     }
-    operator int () const {
+    explicit operator int () const {
         assert(type == number);
         return value.as_num;
     }
@@ -142,7 +142,7 @@ public:
         assert(type == list);
         return value.as_list;
     }
-    operator bool() const {
+    explicit operator bool() const {
         // If the type is null, the bool value is false
         if (type == null)
             return false;
@@ -157,6 +157,38 @@ public:
         return type != null;
     }
     bool isNull() const { return type == null; }
+    JSON &at(size_t i) {
+      assert(type == list);
+      return value.as_list.at(i);
+    }
+    const JSON &at(size_t i) const {
+      assert(type == list);
+      return value.as_list.at(i);
+    }
+    JSON &operator[](size_t i) {
+      assert(type == list);
+      return value.as_list[i];
+    }
+    const JSON &operator[](size_t i) const {
+      assert(type == list);
+      return value.as_list[i];
+    }
+    JSON &at(const std::string &i) {
+      assert(type == map);
+      return value.as_map.at(i);
+    }
+    const JSON &at(const std::string &i) const {
+      assert(type == map);
+      return value.as_map.at(i);
+    }
+    JSON &operator[](const std::string &i) {
+      assert(type == map);
+      return value.as_map[i];
+    }
+    const JSON &operator[](const std::string &i) const {
+      assert(type == map);
+      return value.as_map.at(i);
+    }
 };
 
 using J = JSON;
