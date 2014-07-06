@@ -11,10 +11,11 @@ using namespace json;
 
 go_bandit([]() {
 
-  describe("JSON Generation", [&]() {
+  std::stringstream output;
 
-    std::stringstream output;
-    before_each([&]() { output.str(""); });
+  before_each([&]() { output.str(""); });
+
+  describe("The JSON model", [&]() {
 
     it("1.1. Can be null", [&]() {
       JSON j;
@@ -93,6 +94,10 @@ go_bandit([]() {
       AssertThat(output.str(), Equals("[null,\"String\",4]"));
     });
 
+  });
+
+  describe("The JSON model as a map", [&]() {
+
     JSON mapJSON(JMap{
         {"Lot 1",
          JMap{{"make", {"hillman"}}, {"model", {"Hunter"}}, {"year", {1974}}}},
@@ -100,7 +105,7 @@ go_bandit([]() {
                        {"model", {"Cayenne"}},
                        {"year", {1982}}}}});
 
-    it("1.9. Reads in a map", [&]() {
+    it("2.9. Reads in a map", [&]() {
       JSON j(mapJSON);
       AssertThat(j.isNull(), Equals(false));
       AssertThat(j.whatIs(), Equals(JSON::map));
@@ -114,7 +119,7 @@ go_bandit([]() {
                  R"(2":{"make":"porsche","model":"Cayenne","year":1982}})"));
     });
 
-    it("1.10. Has map access", [&]() {
+    it("2.10. Has map access", [&]() {
       JSON j(mapJSON);
       AssertThat(j.isNull(), Equals(false));
       AssertThat(j.whatIs(), Equals(JSON::map));
@@ -128,19 +133,19 @@ go_bandit([]() {
       AssertThat(static_cast<int>(j["Lot 1"]["year"]), Equals(1974));
     });
 
-    it("1.11. Throws when it can't find a map element", [&]() { 
+    it("2.11. Throws when it can't find a map element", [&]() {
       JSON j(mapJSON);
       AssertThrows(std::out_of_range, j.at("Something that doesn't exist"));
     });
-    
-    it("1.12. Allows adding map entries using [] operators", [&]() {
+
+    it("2.12. Allows adding map entries using [] operators", [&]() {
       JSON j(mapJSON);
       j["Lot 3"] = {"Not here"};
       std::string lot3 = j.at("Lot 3");
       AssertThat(lot3, Equals("Not here"));
     });
 
-    it("1.13. Allows altering map entries using [] operators", [&]() {
+    it("2.13. Allows altering map entries using [] operators", [&]() {
       JSON j(mapJSON);
       j["Lot 1"]["year"] = {1960};
       int year{j["Lot 1"]["year"]};
@@ -151,13 +156,7 @@ go_bandit([]() {
 
   describe("JSON Parsing", [&]() {
 
-    std::stringstream output;
-
-    before_each([&]() {
-      output.str("");
-    });
-
-    it("2.1. Parses null", [&]() {
+    it("3.1. Parses null", [&]() {
       JSON j = read("null");
       AssertThat(j.isNull(), Equals(true));
       AssertThat(j.whatIs(), Equals(JSON::null));
@@ -165,7 +164,7 @@ go_bandit([]() {
       AssertThat(output.str(), Equals("null"));
     });
 
-    it("2.2. Parses true", [&]() {
+    it("3.2. Parses true", [&]() {
       JSON j = read("true");
       AssertThat(j.isNull(), Equals(false));
       AssertThat(j.whatIs(), Equals(JSON::boolean));
@@ -174,7 +173,7 @@ go_bandit([]() {
       AssertThat(output.str(), Equals("true"));
     });
 
-    it("2.3. Parses false", [&]() {
+    it("3.3. Parses false", [&]() {
       JSON j = read("false");
       AssertThat(j.isNull(), Equals(false));
       AssertThat(j.whatIs(), Equals(JSON::boolean));
@@ -183,7 +182,7 @@ go_bandit([]() {
       AssertThat(output.str(), Equals("false"));
     });
 
-    it("2.4. Parses a simple int", [&]() {
+    it("3.4. Parses a simple int", [&]() {
       JSON j = read("5");
       AssertThat(j.isNull(), Equals(false));
       AssertThat(j.whatIs(), Equals(JSON::number));
@@ -192,7 +191,7 @@ go_bandit([]() {
       AssertThat(output.str(), Equals("5"));
     });
 
-    it("2.5. Parses a negative int", [&]() {
+    it("3.5. Parses a negative int", [&]() {
       JSON j = read("-15");
       AssertThat(j.isNull(), Equals(false));
       AssertThat(j.whatIs(), Equals(JSON::number));
@@ -201,7 +200,7 @@ go_bandit([]() {
       AssertThat(output.str(), Equals("-15"));
     });
 
-    it("2.6. Parses a negative double", [&]() {
+    it("3.6. Parses a negative double", [&]() {
       JSON j = read("-12345.67");
       AssertThat(j.isNull(), Equals(false));
       AssertThat(j.whatIs(), Equals(JSON::number));
@@ -211,7 +210,7 @@ go_bandit([]() {
       AssertThat(output.str(), Equals("-12345.67"));
     });
 
-    it("2.7. Parses an exponent", [&]() {
+    it("3.7. Parses an exponent", [&]() {
       JSON j = read("-1234567e-2");
       AssertThat(j.isNull(), Equals(false));
       AssertThat(j.whatIs(), Equals(JSON::number));
@@ -221,7 +220,7 @@ go_bandit([]() {
       AssertThat(output.str(), Equals("-12345.67"));
     });
 
-    it("2.8. Parses a utf8 string", [&]() {
+    it("3.8. Parses a utf8 string", [&]() {
       std::string input(
           R"("Hello \u05D0\u05E0\u05D9 \u05D9\u05DB\u05D5\u05DC )"
           R"(\u05DC\u05D0\u05DB\u05D5\u05DC )"
@@ -237,7 +236,7 @@ go_bandit([]() {
       AssertThat(output.str(), Equals(input));
     });
 
-    it("2.9. Parses a list", [&]() {
+    it("3.9. Parses a list", [&]() {
       JSON j = read(R"xxx(["a", 1, 2.4, ["another", "list"], "12"])xxx");
       AssertThat(j.isNull(), Equals(false));
       AssertThat(j.whatIs(), Equals(JSON::list));
@@ -264,7 +263,7 @@ go_bandit([]() {
                  Equals(R"xxx(["a",1,2.4,["another","list"],"12"])xxx"));
     });
 
-    it("2.10. Parses a map", [&]() {
+    it("3.10. Parses a map", [&]() {
       std::string json(R"xxx({"Name": "Human", "Weapons": ["Teeth", "Bony )xxx"
                        R"xxx(Forehead", "Hands", "Feet"], "Traits": )xxx"
                        R"xxx({"Strength": 4, "Intelligence": 2}})xxx");
@@ -286,7 +285,7 @@ go_bandit([]() {
       AssertThat((int)traits.at("Intelligence"), Equals(2));
     });
 
-    it("2.11. Handle a missing comma in a list", [&]() {
+    it("3.11. Handle a missing comma in a list", [&]() {
       std::string json(R"XXX([1, 2, 3 4])XXX");
       using Error = JSONParser<std::string::const_iterator>::Error;
       AssertThrows(Error, read(json));
@@ -300,7 +299,7 @@ go_bandit([]() {
 #endif
     });
 
-    it("2.12. Handle a non closed list", [&]() {
+    it("3.12. Handle a non closed list", [&]() {
       std::string json(R"XXX([1, 2, 3)XXX");
       using Error = JSONParser<std::string::const_iterator>::Error;
       AssertThrows(Error, read(json));
@@ -314,7 +313,7 @@ go_bandit([]() {
 #endif
     });
 
-    it("2.13. Handle 2 decimal points", [&]() {
+    it("3.13. Handle 2 decimal points", [&]() {
       // Note: I'm not sure what the correct behaviour should be with this. As
       // it is it reads 1.2, then hits the '.' and says, EOI because '.'s not
       // part of number
@@ -327,7 +326,7 @@ go_bandit([]() {
       AssertThat(output.str(), Equals("1.2"));
     });
 
-    it("2.14. bad map", [&]() {
+    it("3.14. bad map", [&]() {
       std::string json(R"XXX({)XXX");
       using Error = JSONParser<std::string::const_iterator>::Error;
       AssertThrows(Error, read(json));
@@ -341,7 +340,7 @@ go_bandit([]() {
 #endif
     });
 
-    it("2.15. Just plain bad", [&]() {
+    it("3.15. Just plain bad", [&]() {
       std::string json(R"XXX(aoeu)XXX");
       using Error = JSONParser<std::string::const_iterator>::Error;
       AssertThrows(Error, read(json));
@@ -354,7 +353,7 @@ go_bandit([]() {
 #endif
     });
 
-    it("3.1. Can parse from a stream, and has map access", [&]() {
+    it("3.16. Can parse from a stream, and has map access", [&]() {
         std::stringstream input;
         input << realJson;
         JSON json;
