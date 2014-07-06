@@ -93,13 +93,15 @@ go_bandit([]() {
       AssertThat(output.str(), Equals("[null,\"String\",4]"));
     });
 
+    JSON mapJSON(JMap{
+        {"Lot 1",
+         JMap{{"make", {"hillman"}}, {"model", {"Hunter"}}, {"year", {1974}}}},
+        {"Lot 2", JMap{{"make", {"porsche"}},
+                       {"model", {"Cayenne"}},
+                       {"year", {1982}}}}});
+
     it("1.9. Reads in a map", [&]() {
-      JSON j(JMap{{"Lot 1", JMap{{"make", {"hillman"}},
-                                 {"model", {"Hunter"}},
-                                 {"year", {1974}}}},
-                  {"Lot 2", JMap{{"make", {"porsche"}},
-                                 {"model", {"Cayenne"}},
-                                 {"year", {1982}}}}});
+      JSON j(mapJSON);
       AssertThat(j.isNull(), Equals(false));
       AssertThat(j.whatIs(), Equals(JSON::map));
       const JMap &map = j;
@@ -113,23 +115,24 @@ go_bandit([]() {
     });
 
     it("1.10. Has map access", [&]() {
-      JSON j(JMap{{"Lot 1", JMap{{"make", {"hillman"}},
-                                 {"model", {"Hunter"}},
-                                 {"year", {1974}}}},
-                  {"Lot 2", JMap{{"make", {"porsche"}},
-                                 {"model", {"Cayenne"}},
-                                 {"year", {1982}}}}});
+      JSON j(mapJSON);
       AssertThat(j.isNull(), Equals(false));
       AssertThat(j.whatIs(), Equals(JSON::map));
-      JSON& lot1 = j.at("Lot 1");
+      JSON &lot1 = j.at("Lot 1");
       AssertThat(lot1.whatIs(), Equals(JSON::map));
-      JSON& jyear = lot1.at("year");
+      JSON &jyear = lot1.at("year");
       // TODO: make a test that calls .at("Something that doesn't exist");
       AssertThat(jyear.whatIs(), Equals(JSON::number));
       int year = static_cast<int>(lot1["year"]);
       AssertThat(year, Equals(1974));
       AssertThat(static_cast<int>(j["Lot 1"]["year"]), Equals(1974));
     });
+
+    it("1.11. Throws when it can't find a map element", [&]() { 
+      JSON j(mapJSON);
+      AssertThrows(std::out_of_range, j.at("Something that doesn't exist"));
+    });
+    
   });
 
   describe("JSON Parsing", [&]() {
