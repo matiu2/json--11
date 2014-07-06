@@ -133,6 +133,12 @@ go_bandit([]() {
       AssertThrows(std::out_of_range, j.at("Something that doesn't exist"));
     });
     
+    it("1.12. Allows adding map entries using [] operators", [&]() {
+      JSON j(mapJSON);
+      j["Lot 3"] = {"Not here"};
+      std::string lot3 = j.at("Lot 3");
+      AssertThat(lot3, Equals("Not here"));
+    });
   });
 
   describe("JSON Parsing", [&]() {
