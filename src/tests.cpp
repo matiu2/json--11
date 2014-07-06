@@ -123,7 +123,7 @@ go_bandit([]() {
       JSON &jyear = lot1.at("year");
       // TODO: make a test that calls .at("Something that doesn't exist");
       AssertThat(jyear.whatIs(), Equals(JSON::number));
-      int year = static_cast<int>(lot1["year"]);
+      int year(lot1["year"]);
       AssertThat(year, Equals(1974));
       AssertThat(static_cast<int>(j["Lot 1"]["year"]), Equals(1974));
     });
@@ -139,6 +139,14 @@ go_bandit([]() {
       std::string lot3 = j.at("Lot 3");
       AssertThat(lot3, Equals("Not here"));
     });
+
+    it("1.13. Allows altering map entries using [] operators", [&]() {
+      JSON j(mapJSON);
+      j["Lot 1"]["year"] = {1960};
+      int year{j["Lot 1"]["year"]};
+      AssertThat(year, Equals(1960));
+    });
+
   });
 
   describe("JSON Parsing", [&]() {
