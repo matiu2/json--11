@@ -105,7 +105,7 @@ go_bandit([]() {
                        {"model", {"Cayenne"}},
                        {"year", {1982}}}}});
 
-    it("2.9. Reads in a map", [&]() {
+    it("2.1. Reads in a map", [&]() {
       JSON j(input);
       AssertThat(j.isNull(), Equals(false));
       AssertThat(j.whatIs(), Equals(JSON::map));
@@ -119,7 +119,7 @@ go_bandit([]() {
                  R"(2":{"make":"porsche","model":"Cayenne","year":1982}})"));
     });
 
-    it("2.10. Has map access", [&]() {
+    it("2.2. Has map access", [&]() {
       JSON j(input);
       AssertThat(j.isNull(), Equals(false));
       AssertThat(j.whatIs(), Equals(JSON::map));
@@ -133,23 +133,30 @@ go_bandit([]() {
       AssertThat(static_cast<int>(j["Lot 1"]["year"]), Equals(1974));
     });
 
-    it("2.11. Throws when it can't find a map element", [&]() {
+    it("2.3. Throws when it can't find a map element", [&]() {
       JSON j(input);
       AssertThrows(std::out_of_range, j.at("Something that doesn't exist"));
     });
 
-    it("2.12. Allows adding map entries using [] operators", [&]() {
+    it("2.3. Allows adding map entries using [] operators", [&]() {
       JSON j(input);
       j["Lot 3"] = {"Not here"};
       std::string lot3 = j.at("Lot 3");
       AssertThat(lot3, Equals("Not here"));
     });
 
-    it("2.13. Allows altering map entries using [] operators", [&]() {
+    it("2.4. Allows altering map entries using [] operators", [&]() {
       JSON j(input);
       j["Lot 1"]["year"] = {1960};
       int year{j["Lot 1"]["year"]};
       AssertThat(year, Equals(1960));
+    });
+
+    it("2.5. can export with jsonToHomogenousMap", [&]() {
+      JSON j{JMap{{"Energy (Kj)", 11}, {"Sugar", 1.1}, {"Fat", 20}, {"Potasium", 0.2}}};
+      std::map<std::string, double> expected = {{"Energy (Kj)", 11}, {"Sugar", 1.1}, {"Fat", 20}, {"Potasium", 0.2}};
+      std::map<std::string, double> got = jsonToHomogenousMap<double>(j);
+      AssertThat(got, Equals(expected));
     });
 
   });
