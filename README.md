@@ -56,19 +56,11 @@ Most conversion is done through casting.
 
 ## Examples
 
- * [unicode](examples/unicode.cpp Unicode)
-
-    // Cast to int
-    JSON j{20};
-    int output{j};
-    cout << output << " = " << (int)j << endl; 
-    // output: 20 = 20
-
-    // Cast to string
-    JSON j{"This is a \\u16E5 string"};
-    std::string output{j};
-    // output now contains 
-
+ * [unicode](examples/unicode.cpp)
+ * [castToInt](examples/castToInt.cpp)
+ * [unicode](examples/unicode.cpp)
+ * [vectorOfStrings](examples/vectorOfString.cpp)
+ * [mapOfInts](examples/mapOfInts.cpp)
 
 # Advanced parsing
 

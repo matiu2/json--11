@@ -18,5 +18,10 @@ int main(int, char **) {
   for (const auto &pair : output)
     cout << pair.first << ": " << pair.second << ", ";
   cout << endl;
+  /* Output:
+   * JSON: {"Eggs": 2, "Bacon": 2000, "Beans": 12}
+   * read: {"Bacon":2000,"Beans":12,"Eggs":2}
+   * output: Bacon: 2000, Beans: 12, Eggs: 2, 
+   */
 }
 
