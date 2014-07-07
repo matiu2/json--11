@@ -119,6 +119,10 @@ public:
         assert(type == text);
         return value.as_string;
     }
+    operator std::string&() {
+        assert(type == text);
+        return value.as_string;
+    }
     operator std::wstring() const {
         assert(type == text);
         std::wstring result;

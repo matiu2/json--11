@@ -18,3 +18,4 @@ endif()
 include_directories(${BANDIT_INCLUDE_DIR})
 
 add_subdirectory(src)
+add_subdirectory(examples)

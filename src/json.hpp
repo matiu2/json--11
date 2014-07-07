@@ -36,9 +36,12 @@ istream& operator >>(istream& i, json::JSON& j) {
   return i;
 }
 
-#ifndef NO_LOCATIONS
 using StreamIterator=std::istream_iterator<char>;
+#ifndef NO_LOCATIONS
 using LocStreamIterator = LocatingIterator<StreamIterator>;
+#else
+using LocStreamIterator = StreamIterator
+#endif
 std::pair<JSON, LocStreamIterator> readWithPos(std::istream &in, bool skipOverErrors = false) {
   JSONParser<StreamIterator> parser(StreamIterator(in), StreamIterator(), skipOverErrors);
   JSON&& result(read(parser));
@@ -46,7 +49,11 @@ std::pair<JSON, LocStreamIterator> readWithPos(std::istream &in, bool skipOverEr
   return make_pair(result, p);
 }
 
+#ifndef NO_LOCATIONS
 using LocStringIterator = LocatingIterator<std::string::const_iterator>;
+#else
+using LocStringIterator = std::string::const_iterator;
+#endif
 std::pair<JSON, LocStringIterator> readWithPos(const std::string &in, bool skipOverErrors = false) {
   JSONParser<std::string::const_iterator> parser(in.cbegin(), in.cend(), skipOverErrors);
   JSON&& result(read(parser));
@@ -54,14 +61,17 @@ std::pair<JSON, LocStringIterator> readWithPos(const std::string &in, bool skipO
   return make_pair(result, p);
 }
 
-template<typename T>
-std::pair<JSON, LocatingIterator<T>>  readWithPos(T begin, T end, bool skipOverErrors = false) {
+#ifndef NO_LOCATIONS
+template <typename T>
+std::pair<JSON, LocatingIterator<T>> readWithPos(T begin, T end,
+                                                 bool skipOverErrors = false) {
+#else
+template <typename T>
+std::pair<JSON, T> readWithPos(T begin, T end, bool skipOverErrors = false) {
+#endif
   JSONParser<T> parser(begin, end, skipOverErrors);
-  JSON&& result(read(parser));
+  JSON &&result(read(parser));
   auto p = parser.json();
   return make_pair(result, p);
 }
-#endif
-
-
 }
