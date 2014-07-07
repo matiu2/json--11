@@ -174,9 +174,12 @@ go_bandit([]() {
 
     it("3.3. Allows [] assignment to a list", [&]() {
       input[2] = 999;
-      AssertThat(input.at(2), Equals(999));
+      AssertThat((int)input.at(2), Equals(999));
     });
 
+    it("3.4. at(999) throws out_of_range", [&]() {
+      AssertThrows(std::out_of_range, input.at(9999));
+    });
   });
 
   describe("JSON Parsing", [&]() {
