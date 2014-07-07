@@ -181,6 +181,12 @@ go_bandit([]() {
       AssertThrows(std::out_of_range, input.at(999));
     });
 
+    it("3.5 can export via jsonToHomogenousList", [&]() {
+      JSON j{JList{900.99, 989.99, 2000}};
+      std::vector<double> exported = jsonToHomogenousList<double>(j);
+      AssertThat(exported, Equals(std::vector<double>{900.99, 989.99, 2000}));
+    });
+
   });
 
   describe("JSON Parsing", [&]() {

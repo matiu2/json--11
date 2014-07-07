@@ -8,7 +8,6 @@ using namespace json;
 using namespace std;
 
 int main(int, char **) {
-  // Parsing
   std::string input = R"({"Eggs": 2, "Bacon": 2000, "Beans": 12})";
   JSON json = read(input);
   map<string, int> output = jsonToHomogenousMap<int>(json);
