@@ -177,9 +177,10 @@ go_bandit([]() {
       AssertThat((int)input.at(2), Equals(999));
     });
 
-    it("3.4. at(999) throws out_of_range", [&]() {
-      AssertThrows(std::out_of_range, input.at(9999));
+    it("3.4. On a list, at(999) throws out_of_range", [&]() {
+      AssertThrows(std::out_of_range, input.at(999));
     });
+
   });
 
   describe("JSON Parsing", [&]() {
