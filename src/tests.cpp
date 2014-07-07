@@ -167,6 +167,11 @@ go_bandit([]() {
       AssertThat(value, Equals(std::vector<int>{1, 2, 3, 4, 5}));
     });
 
+    it("3.2. Allows at() access to a list", [&]() {
+      int x{input.at(2)};
+      AssertThat(x, Equals(3));
+    });
+
   });
 
   describe("JSON Parsing", [&]() {
