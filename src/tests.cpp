@@ -172,6 +172,11 @@ go_bandit([]() {
       AssertThat(x, Equals(3));
     });
 
+    it("3.3. Allows [] assignment to a list", [&]() {
+      input[2] = 999;
+      AssertThat(input.at(2), Equals(999));
+    });
+
   });
 
   describe("JSON Parsing", [&]() {
