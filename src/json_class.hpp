@@ -134,6 +134,14 @@ public:
         assert(type == list);
         return value.as_list;
     }
+    operator JMap&() {
+        assert(type == map);
+        return value.as_map;
+    }
+    operator JList&() {
+        assert(type == list);
+        return value.as_list;
+    }
     explicit operator bool() const {
         // If the type is null, the bool value is false
         if (type == null)
@@ -182,8 +190,6 @@ public:
       return value.as_map.at(i);
     }
 };
-
-using J = JSON;
 
 std::ostream& operator <<(ostream& s, const JSON& j) {
     switch(j.type) {
