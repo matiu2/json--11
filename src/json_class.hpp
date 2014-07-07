@@ -234,4 +234,23 @@ JSON JBool(bool val) {
     return JSON(val, 1);
 }
 
+template <typename T>
+std::vector<T> jsonToHomogenousList(const JSON& j) {
+  std::vector<T> result;
+  const JList& input = j;
+  result.reserve(input.size());
+  for (const JSON& item : input)
+    result.push_back(static_cast<const T&>(item));
+  return result;
+}
+
+template <typename T>
+std::map<std::string, T> jsonToHomogenousMap(const JSON& j) {
+  std::map<std::string, T> result;
+  const JMap& input = j;
+  for (auto i = input.cbegin(); i != input.cend(); ++i)
+    result.insert(make_pair(i->first, static_cast<const T &>(i->second)));
+  return result;
+}
+
 }

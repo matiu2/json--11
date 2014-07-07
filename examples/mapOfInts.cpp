@@ -1,7 +1,7 @@
 #include "../src/json.hpp"
 
 #include <iostream>
-#include <vector>
+#include <map>
 #include <string>
 
 using namespace json;
@@ -9,14 +9,14 @@ using namespace std;
 
 int main(int, char **) {
   // Parsing
-  std::string input = R"(["Eggs", "Bacon", "Beans"])";
+  std::string input = R"({"Eggs": 2, "Bacon": 2000, "Beans": 12})";
   JSON json = read(input);
-  vector<string> output = jsonToHomogenousList<string>(json);
+  map<string, int> output = jsonToHomogenousMap<int>(json);
   cout << "JSON: " << input << endl
        << "read: " << json << endl
        << "output: ";
-  for (const auto &s : output)
-    cout << s << ", ";
+  for (const auto &pair : output)
+    cout << pair.first << ": " << pair.second << ", ";
   cout << endl;
 }
 
