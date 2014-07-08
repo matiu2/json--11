@@ -240,7 +240,7 @@ std::vector<T> jsonToHomogenousList(const JSON& j) {
   const JList& input = j;
   result.reserve(input.size());
   for (const JSON& item : input)
-    result.push_back(static_cast<const T&>(item));
+    result.push_back(static_cast<T>(item));
   return result;
 }
 
@@ -249,7 +249,7 @@ std::map<std::string, T> jsonToHomogenousMap(const JSON& j) {
   std::map<std::string, T> result;
   const JMap& input = j;
   for (auto i = input.cbegin(); i != input.cend(); ++i)
-    result.insert(make_pair(i->first, static_cast<const T &>(i->second)));
+    result.insert(make_pair(i->first, static_cast<T>(i->second)));
   return result;
 }
 
