@@ -6,7 +6,7 @@ A JSON reader+writer library for C++11.
  * Super fast
  * Full automatic transparent unicode support through utf8
 
-This is a the best c++11 JSON library that I know of. It does generation and parsing. It's all headers.
+This is the best c++11 JSON library that I know of. It does generation and parsing. It's all headers.
 
 # To use in your project:
 
@@ -64,7 +64,7 @@ Most conversion is done through casting.
 
 # Advanced parsing
 
-There several 'json::read' funcitions, for stream, string and other iterators:
+There are several 'json::read' functions for stream, string and other iterators:
 
     JSON read(std::istream &in, bool skipOverErrors = false);
     JSON read(const std::string &in, bool skipOverErrors = false);
