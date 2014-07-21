@@ -11,7 +11,7 @@ int main(int, char **) {
   // Parsing
   std::string input = R"(["Eggs", "Bacon", "Beans"])";
   JSON json = read(input);
-  vector<string> output = jsonToHomogenousList<string>(json);
+  vector<std::string> output = jsonToHomogenousList<std::string>(json);
   cout << "JSON: " << input << endl
        << "read: " << json << endl
        << "output: ";

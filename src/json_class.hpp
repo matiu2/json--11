@@ -115,11 +115,7 @@ public:
         return value.as_num;
     }
     /// Return as a UTF8 encoded string
-    operator const std::string&() const {
-        assert(type == text);
-        return value.as_string;
-    }
-    operator std::string&() {
+    operator std::string() const {
         assert(type == text);
         return value.as_string;
     }
