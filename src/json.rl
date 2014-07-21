@@ -134,7 +134,7 @@ private:
   /// Searches though whitespace for a @a c meaning the start of an attribute
   /// name
   template<char c>
-  void scanWSFor() {
+  char scanWSFor() {
     while ((p != pe) && (p != eof)) {
       switch (*p++) {
       case 9:
@@ -143,7 +143,43 @@ private:
       case ' ':
         continue;
       case c:
-        return;
+        return c;
+      default:
+#ifndef NO_LOCATIONS
+        throw Error(
+            std::string("Couldn't find '") + c + "' to signify the start of an attribute value",
+            p.row, p.col);
+#else
+        throw Error(
+            "Couldn't find '" + c + "' to signify the start of an attribute value");
+#endif
+      }
+    }
+#ifndef NO_LOCATIONS
+    throw Error(std::string("hit end while looking for '") + c + "' to signify the start of an "
+                "attribute value",
+                p.row, p.col);
+#else
+    throw Error(std::string("hit end while looking for '") + c + "' to signify the start of an "
+                "attribute value");
+#endif
+  }
+
+  /// Searches though whitespace for a @a c meaning the start of an attribute
+  /// name or @e meaning the 'end' of the range
+  template<char c, char e>
+  char scanWSFor() {
+    while ((p != pe) && (p != eof)) {
+      switch (*p++) {
+      case 9:
+      case 10:
+      case 13:
+      case ' ':
+        continue;
+      case c:
+        return c;
+      case e:
+        return e;
       default:
 #ifndef NO_LOCATIONS
         throw Error(
@@ -425,11 +461,19 @@ public:
   */
   bool doIHaveMoreArray() { return doIHaveMore<']'>(); }
 
+  /// Finds the next attribute in a dictionary. Puts us just after the '"' of
+  /// the attribute name, or at the '}' at the end of a dict. @returns true if
+  /// it finds the attribute; false if we're at the end of the dict
+  bool findNextAttribute() {
+    constexpr char end('}');
+    char c = scanWSFor<'"', end>();
+    return (c != end);
+  }
+
   /**
   * @brief While reading an object .. get the next attribute name
   */
   std::string readNextAttribute() {
-    scanWSFor<'"'>();
     std::string output = readString();
     scanWSFor<':'>();
     return output;
@@ -453,6 +497,8 @@ public:
       return;
     case JSONParser::object:
       do {
+        if (!findNextAttribute())
+          break;
         readNextAttribute();
         consumeOneValue();
       } while (doIHaveMoreObject());
@@ -523,7 +569,9 @@ public:
   *
   * @return true if there is more Object to read
   */
-  bool doIHaveMoreObject() { return doIHaveMore<'}'>(); }
+  bool doIHaveMoreAttributes() { return doIHaveMore<'}'>(); }
+  /// Use just after reading the start of an object. @returns true if there are any object attributes
+  bool doIHaveMoreObject() { return doIHaveMore<'}', '"'>(); }
 
   /// Returns the pointer to the json we are parsing
 #ifndef NO_LOCATIONS
@@ -545,7 +593,10 @@ public:
   /// @returns - the number of attributes read
   size_t readObject(const ReaderMap &readerMap) {
     size_t attrsRead = 0;
-    while (doIHaveMoreObject()) {
+    // Full object
+    do {
+      if (!findNextAttribute())
+        break;
       std::string nextAttrName = readNextAttribute();
       // See if we expected an attribute with that name
       auto pReader = readerMap.find(nextAttrName);
@@ -579,7 +630,7 @@ public:
       }
       reader(); // Actually read in the value to the person object
       ++attrsRead;
-    }
+    } while (doIHaveMoreAttributes());
     return attrsRead;
   }
 };

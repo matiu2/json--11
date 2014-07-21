@@ -13,8 +13,11 @@ This is a the best c++11 JSON library that I know of. It does generation and par
 Download these headers into your source:
 
  * https://raw.githubusercontent.com/matiu2/json--11/master/src/json.hpp
- * https://github.com/matiu2/json--11/raw/master/src/mapper.hpp
- * https://github.com/matiu2/json--11/raw/master/src/parser.hpp
+ * https://raw.githubusercontent.com/matiu2/json--11/master/src/mapper.hpp
+ * https://raw.githubusercontent.com/matiu2/json--11/master/src/parser.hpp
+ * https://raw.githubusercontent.com/matiu2/json--11/master/src/json_class.hpp
+ * https://raw.githubusercontent.com/matiu2/json--11/master/src/utf82json.hpp
+ * https://raw.githubusercontent.com/matiu2/json--11/master/src/locatingIterator.hpp
 
 # Only one file to include
 

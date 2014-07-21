@@ -9,6 +9,7 @@ template <typename T>
 JSON read(JSONParser<T>& parser) {
   switch (parser.getNextType()) {
     case JSONParser<T>::null:
+      parser.readNull();
       return {};
     case JSONParser<T>::boolean:
       return JSON(parser.readBoolean(), 1);
@@ -22,9 +23,11 @@ JSON read(JSONParser<T>& parser) {
     case JSONParser<T>::object: {
       JMap contents;
       do {
+        if (!parser.findNextAttribute())
+          break;
         std::string attrName = parser.readNextAttribute();
         contents.insert({attrName, std::move(read(parser))});
-      } while (parser.doIHaveMoreObject());
+      } while (parser.doIHaveMoreAttributes());
       return contents;
     }
     case JSONParser<T>::number:

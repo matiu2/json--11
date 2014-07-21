@@ -125,7 +125,7 @@ private:
   /// Searches though whitespace for a @a c meaning the start of an attribute
   /// name
   template<char c>
-  void scanWSFor() {
+  char scanWSFor() {
     while ((p != pe) && (p != eof)) {
       switch (*p++) {
       case 9:
@@ -134,7 +134,43 @@ private:
       case ' ':
         continue;
       case c:
-        return;
+        return c;
+      default:
+#ifndef NO_LOCATIONS
+        throw Error(
+            std::string("Couldn't find '") + c + "' to signify the start of an attribute value",
+            p.row, p.col);
+#else
+        throw Error(
+            "Couldn't find '" + c + "' to signify the start of an attribute value");
+#endif
+      }
+    }
+#ifndef NO_LOCATIONS
+    throw Error(std::string("hit end while looking for '") + c + "' to signify the start of an "
+                "attribute value",
+                p.row, p.col);
+#else
+    throw Error(std::string("hit end while looking for '") + c + "' to signify the start of an "
+                "attribute value");
+#endif
+  }
+
+  /// Searches though whitespace for a @a c meaning the start of an attribute
+  /// name or @e meaning the 'end' of the range
+  template<char c, char e>
+  char scanWSFor() {
+    while ((p != pe) && (p != eof)) {
+      switch (*p++) {
+      case 9:
+      case 10:
+      case 13:
+      case ' ':
+        continue;
+      case c:
+        return c;
+      case e:
+        return e;
       default:
 #ifndef NO_LOCATIONS
         throw Error(
@@ -377,16 +413,16 @@ public:
       return JSONNumberInfo(intIsNeg, intPart, expPart);
     };
     
-#line 389 "/home/matiu/projects/json++11/src/json.rl"
+#line 425 "/home/matiu/projects/json++11/src/json.rl"
     int startState =
       
-#line 384 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 420 "/home/matiu/projects/json++11/src/parser.hpp"
 1
-#line 391 "/home/matiu/projects/json++11/src/json.rl"
+#line 427 "/home/matiu/projects/json++11/src/json.rl"
     ;
     int cs = startState; // Current state
     
-#line 390 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 426 "/home/matiu/projects/json++11/src/parser.hpp"
 	{
 	if ( p == pe )
 		goto _test_eof;
@@ -414,7 +450,7 @@ st2:
 	if ( ++p == pe )
 		goto _test_eof2;
 case 2:
-#line 418 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 454 "/home/matiu/projects/json++11/src/parser.hpp"
 	if ( 48 <= (*p) && (*p) <= 57 )
 		goto tr2;
 	goto st0;
@@ -433,7 +469,7 @@ st6:
 	if ( ++p == pe )
 		goto _test_eof6;
 case 6:
-#line 437 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 473 "/home/matiu/projects/json++11/src/parser.hpp"
 	switch( (*p) ) {
 		case 46: goto st3;
 		case 69: goto st4;
@@ -464,7 +500,7 @@ st7:
 	if ( ++p == pe )
 		goto _test_eof7;
 case 7:
-#line 468 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 504 "/home/matiu/projects/json++11/src/parser.hpp"
 	switch( (*p) ) {
 		case 69: goto st4;
 		case 101: goto st4;
@@ -497,7 +533,7 @@ st5:
 	if ( ++p == pe )
 		goto _test_eof5;
 case 5:
-#line 501 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 537 "/home/matiu/projects/json++11/src/parser.hpp"
 	if ( 48 <= (*p) && (*p) <= 57 )
 		goto tr5;
 	goto st0;
@@ -515,7 +551,7 @@ st8:
 	if ( ++p == pe )
 		goto _test_eof8;
 case 8:
-#line 519 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 555 "/home/matiu/projects/json++11/src/parser.hpp"
 	if ( 48 <= (*p) && (*p) <= 57 )
 		goto tr5;
 	goto st0;
@@ -543,14 +579,14 @@ case 8:
         return makeJSONNumber();
     }
 	break;
-#line 547 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 583 "/home/matiu/projects/json++11/src/parser.hpp"
 	}
 	}
 
 	_out: {}
 	}
 
-#line 395 "/home/matiu/projects/json++11/src/json.rl"
+#line 431 "/home/matiu/projects/json++11/src/json.rl"
 
     // The state machine returns, so the code will only get here if it can't
     // parse the string
@@ -561,18 +597,18 @@ case 8:
 
   std::string readString() {
     
-#line 405 "/home/matiu/projects/json++11/src/json.rl"
+#line 441 "/home/matiu/projects/json++11/src/json.rl"
     int startState = 
-#line 567 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 603 "/home/matiu/projects/json++11/src/parser.hpp"
 1
-#line 406 "/home/matiu/projects/json++11/src/json.rl"
+#line 442 "/home/matiu/projects/json++11/src/json.rl"
     ;
     int cs = startState; // Current state
     wchar_t uniChar = 0;
     int uniCharBytes = 0;
     std::string output;
     
-#line 576 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 612 "/home/matiu/projects/json++11/src/parser.hpp"
 	{
 	if ( p == pe )
 		goto _test_eof;
@@ -648,7 +684,7 @@ st1:
 	if ( ++p == pe )
 		goto _test_eof1;
 case 1:
-#line 652 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 688 "/home/matiu/projects/json++11/src/parser.hpp"
 	switch( (*p) ) {
 		case 34: goto tr1;
 		case 92: goto st2;
@@ -710,7 +746,7 @@ st5:
 	if ( ++p == pe )
 		goto _test_eof5;
 case 5:
-#line 714 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 750 "/home/matiu/projects/json++11/src/parser.hpp"
 	goto st0;
 st0:
 cs = 0;
@@ -759,7 +795,7 @@ st2:
 	if ( ++p == pe )
 		goto _test_eof2;
 case 2:
-#line 763 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 799 "/home/matiu/projects/json++11/src/parser.hpp"
 	switch( (*p) ) {
 		case 98: goto tr3;
 		case 102: goto tr4;
@@ -780,7 +816,7 @@ st3:
 	if ( ++p == pe )
 		goto _test_eof3;
 case 3:
-#line 784 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 820 "/home/matiu/projects/json++11/src/parser.hpp"
 	if ( (*p) < 65 ) {
 		if ( 48 <= (*p) && (*p) <= 57 )
 			goto tr9;
@@ -809,7 +845,7 @@ st4:
 	if ( ++p == pe )
 		goto _test_eof4;
 case 4:
-#line 813 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 849 "/home/matiu/projects/json++11/src/parser.hpp"
 	switch( (*p) ) {
 		case 34: goto tr12;
 		case 92: goto tr13;
@@ -834,7 +870,7 @@ case 4:
 	_out: {}
 	}
 
-#line 413 "/home/matiu/projects/json++11/src/json.rl"
+#line 449 "/home/matiu/projects/json++11/src/json.rl"
 
     // The state machine returns, so the code will only get here if it can't
     // parse the string
@@ -850,11 +886,19 @@ case 4:
   */
   bool doIHaveMoreArray() { return doIHaveMore<']'>(); }
 
+  /// Finds the next attribute in a dictionary. Puts us just after the '"' of
+  /// the attribute name, or at the '}' at the end of a dict. @returns true if
+  /// it finds the attribute; false if we're at the end of the dict
+  bool findNextAttribute() {
+    constexpr char end('}');
+    char c = scanWSFor<'"', end>();
+    return (c != end);
+  }
+
   /**
   * @brief While reading an object .. get the next attribute name
   */
   std::string readNextAttribute() {
-    scanWSFor<'"'>();
     std::string output = readString();
     scanWSFor<':'>();
     return output;
@@ -878,6 +922,8 @@ case 4:
       return;
     case JSONParser::object:
       do {
+        if (!findNextAttribute())
+          break;
         readNextAttribute();
         consumeOneValue();
       } while (doIHaveMoreObject());
@@ -948,7 +994,9 @@ case 4:
   *
   * @return true if there is more Object to read
   */
-  bool doIHaveMoreObject() { return doIHaveMore<'}'>(); }
+  bool doIHaveMoreAttributes() { return doIHaveMore<'}'>(); }
+  /// Use just after reading the start of an object. @returns true if there are any object attributes
+  bool doIHaveMoreObject() { return doIHaveMore<'}', '"'>(); }
 
   /// Returns the pointer to the json we are parsing
 #ifndef NO_LOCATIONS
@@ -970,7 +1018,10 @@ case 4:
   /// @returns - the number of attributes read
   size_t readObject(const ReaderMap &readerMap) {
     size_t attrsRead = 0;
-    while (doIHaveMoreObject()) {
+    // Full object
+    do {
+      if (!findNextAttribute())
+        break;
       std::string nextAttrName = readNextAttribute();
       // See if we expected an attribute with that name
       auto pReader = readerMap.find(nextAttrName);
@@ -1004,7 +1055,7 @@ case 4:
       }
       reader(); // Actually read in the value to the person object
       ++attrsRead;
-    }
+    } while (doIHaveMoreAttributes());
     return attrsRead;
   }
 };

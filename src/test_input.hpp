@@ -184,3 +184,22 @@ const std::string realJson =
     R"XXX(role","name":"checkmate"}],"name":"mister_awesome","RAX-AUTH:)XXX"
     R"XXX(defaultRegion":"ORD"}}})XXX";
 
+const char* sample2 = R"XXX({
+  "args": {}, 
+  "data": "", 
+  "files": {}, 
+  "form": {
+    "This is some data": ""
+  }, 
+  "headers": {
+    "Accept": "*/*", 
+    "Connection": "close", 
+    "Content-Length": "17", 
+    "Content-Type": "application/x-www-form-urlencoded", 
+    "Host": "httpbin.org", 
+    "X-Request-Id": "xxxxxxx-yyyy-zzzz-4444-ZZZZZZZZZZZZ"
+  }, 
+  "json": null, 
+  "origin": "1.2.3.4", 
+  "url": "http://httpbin.org/post"
+})XXX";

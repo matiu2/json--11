@@ -395,14 +395,13 @@ go_bandit([]() {
 #endif
     });
 
-    it("4.16. Can parse from a stream, and has map access", [&]() {
-        std::stringstream input;
-        input << realJson;
-        JSON json;
-        input >> json;
-        const std::string& token = json["access"]["token"]["id"];
-        AssertThat(token, Equals("abcdxxxxxxxxxxxxxxxxxxxxxxxxxxxx"));
+    it("4.17. Can read input with whitespace", [&]() {
+        const char* end = sample2 + strlen(sample2);
+        JSON json = read(sample2, end);
+        const std::string& len = json["headers"]["Content-Length"];
+        AssertThat(len, Equals("17"));
     });
+
   });
 });
 
