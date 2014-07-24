@@ -395,6 +395,16 @@ go_bandit([]() {
 #endif
     });
 
+    it("4.16. Can read an empty dict with whitespace", [&]() {
+      std::string json("       { \n  }  ");
+      JSON j = read(json);
+      AssertThat(j.isNull(), Equals(false));
+      AssertThat(j.whatIs(), Equals(JSON::map));
+      AssertThat(static_cast<JMap&>(j), Equals(JMap()));
+      output << j;
+      AssertThat(output.str(), Equals("{}"));
+    });
+
     it("4.17. Can read input with whitespace", [&]() {
         const char* end = sample2 + strlen(sample2);
         JSON json = read(sample2, end);

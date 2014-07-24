@@ -189,7 +189,55 @@ public:
       assert(type == map);
       return value.as_map.at(i);
     }
+    bool operator==(const JSON &other) const {
+      if (other.type == type)
+        switch (type) {
+        case null:
+          return true;
+        case boolean:
+          return value.as_bool == other.value.as_bool;
+        case number:
+          return value.as_num == other.value.as_num;
+        case text:
+          return value.as_string == other.value.as_string;
+        case map:
+          return value.as_map == other.value.as_map;
+        case list:
+          return value.as_list == other.value.as_list;
+        }
+      return false;
+    }
 };
+
+std::ostream &operator<<(ostream &s, const JMap &j) {
+  s << '{';
+  auto entry = j.cbegin();
+  auto end = j.cend();
+  if (entry != end) {
+    --end; // Second to last one so that we don't put a comma after the last one
+    while (entry != end) {
+      s << '"' << utf82json(entry->first) << R"(":)" << entry->second << ',';
+      ++entry;
+    }
+    // The last entry in the map doesn't have a comma after it
+    s << '"' << utf82json(entry->first) << R"(":)" << entry->second;
+  }
+  s << '}';
+  return s;
+}
+
+std::ostream &operator<<(ostream &s, const JList &j) {
+  s << '[';
+  auto entry = j.cbegin();
+  auto end = j.cend();
+  --end; // Second to last one so that we don't put a comma after the last one
+  while (entry != end) {
+    s << *entry << ',';
+    ++entry;
+  }
+  s << *entry << ']';
+  return s;
+}
 
 std::ostream& operator <<(ostream& s, const JSON& j) {
     switch(j.type) {
@@ -198,29 +246,12 @@ std::ostream& operator <<(ostream& s, const JSON& j) {
         case JSON::number: s << j.value.as_num; break;
         case JSON::text: s << '"' << utf82json(j.value.as_string) << '"'; break;
         case JSON::map: {
-            s << '{';
-            auto entry = j.value.as_map.cbegin();
-            auto end = j.value.as_map.cend();
-            --end; // Second to last one so that we don't put a comma after the last one
-            while (entry != end) {
-                s << '"' << utf82json(entry->first) << R"(":)" << entry->second << ',';
-                ++entry;
-            }
-            // The last entry in the map doesn't have a comma after it
-            s << '"' << utf82json(entry->first) << R"(":)" << entry->second;
-            s << '}';
-            break;
+          s << j.value.as_map;
+          break;
         }
         case JSON::list: {
-            s << '[';
-            auto entry = j.value.as_list.cbegin();
-            auto end = j.value.as_list.cend();
-            --end; // Second to last one so that we don't put a comma after the last one
-            while (entry != end) {
-                s << *entry << ',';
-                ++entry;
-            }
-            s << *entry << ']';
+          s << j.value.as_list;
+          break;
         }
     };
     return s;
