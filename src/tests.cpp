@@ -410,6 +410,8 @@ go_bandit([]() {
         JSON json = read(sample2, end);
         const std::string& len = json["headers"]["Content-Length"];
         AssertThat(len, Equals("17"));
+        const std::string& formData = json["form"]["This is some data"];
+        AssertThat(formData, Equals(""));
     });
 
   });
