@@ -200,7 +200,7 @@ case 8:
         #ifdef DEBUG
         std::cout << "gotNumber " << expIsNeg << " - " << expPart1 << " - " << expPart2 << " - " << intPart << " - " << intIsNeg << " - ";
         #endif
-        return makeJSONNumber();
+        return makeNumber();
     }
 	break;
 #line 207 "/home/matiu/projects/json++11/src/number.hpp"

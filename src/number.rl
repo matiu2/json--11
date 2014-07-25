@@ -44,7 +44,7 @@
         #ifdef DEBUG
         std::cout << "gotNumber " << expIsNeg << " - " << expPart1 << " - " << expPart2 << " - " << intPart << " - " << intIsNeg << " - ";
         #endif
-        return makeJSONNumber();
+        return makeNumber();
     }
     # JSON Number expression
     basic_int = ('-'?@setNegative).([0-9]+@recordInt)@recordInt;

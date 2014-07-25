@@ -329,7 +329,7 @@ go_bandit([]() {
 
     it("4.11. Handle a missing comma in a list", [&]() {
       std::string json(R"XXX([1, 2, 3 4])XXX");
-      using Error = JSONParser<std::string::const_iterator>::Error;
+      using Error = Parser<std::string::const_iterator>::Error;
       AssertThrows(Error, read(json));
 #ifndef NO_LOCATIONS
       AssertThat(
@@ -343,7 +343,7 @@ go_bandit([]() {
 
     it("4.12. Handle a non closed list", [&]() {
       std::string json(R"XXX([1, 2, 3)XXX");
-      using Error = JSONParser<std::string::const_iterator>::Error;
+      using Error = Parser<std::string::const_iterator>::Error;
       AssertThrows(Error, read(json));
 #ifndef NO_LOCATIONS
       AssertThat(
@@ -370,7 +370,7 @@ go_bandit([]() {
 
     it("4.14. bad map", [&]() {
       std::string json(R"XXX({)XXX");
-      using Error = JSONParser<std::string::const_iterator>::Error;
+      using Error = Parser<std::string::const_iterator>::Error;
       AssertThrows(Error, read(json));
 #ifndef NO_LOCATIONS
       AssertThat(LastException<Error>().what(),
@@ -384,7 +384,7 @@ go_bandit([]() {
 
     it("4.15. Just plain bad", [&]() {
       std::string json(R"XXX(aoeu)XXX");
-      using Error = JSONParser<std::string::const_iterator>::Error;
+      using Error = Parser<std::string::const_iterator>::Error;
       AssertThrows(Error, read(json));
 #ifndef NO_LOCATIONS
       AssertThat(LastException<Error>().what(),
@@ -410,6 +410,8 @@ go_bandit([]() {
         JSON json = read(sample2, end);
         const std::string& len = json["headers"]["Content-Length"];
         AssertThat(len, Equals("17"));
+        const std::string& accept = json["headers"]["Accept"];
+        AssertThat(accept, Equals("*/*"));
         const std::string& formData = json["form"]["This is some data"];
         AssertThat(formData, Equals(""));
     });

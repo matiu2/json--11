@@ -6,21 +6,21 @@ namespace json {
 
 /// Recursive function that reads from a json string and returns a JSON object
 template <typename T>
-JSON read(JSONParser<T>& parser) {
+JSON read(Parser<T>& parser) {
   switch (parser.getNextType()) {
-    case JSONParser<T>::null:
+    case Parser<T>::null:
       parser.readNull();
       return {};
-    case JSONParser<T>::boolean:
+    case Parser<T>::boolean:
       return JSON(parser.readBoolean(), 1);
-    case JSONParser<T>::array: {
+    case Parser<T>::array: {
       JList contents;
       do
         contents.push_back(read(parser));
       while (parser.doIHaveMoreArray());
       return contents;
     }
-    case JSONParser<T>::object: {
+    case Parser<T>::object: {
       JMap contents;
       do {
         if (!parser.findNextAttribute())
@@ -30,12 +30,12 @@ JSON read(JSONParser<T>& parser) {
       } while (parser.doIHaveMoreAttributes());
       return contents;
     }
-    case JSONParser<T>::number:
+    case Parser<T>::number:
       return parser.readNumber();
-    case JSONParser<T>::string:
+    case Parser<T>::string:
       return JSON(parser.readString());
-    case JSONParser<T>::HIT_END:
-    case JSONParser<T>::ERROR:
+    case Parser<T>::HIT_END:
+    case Parser<T>::ERROR:
     default:
       // Should never get here
       throw std::logic_error("Unexpected error while parsing JSON");

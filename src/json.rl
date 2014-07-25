@@ -32,14 +32,14 @@ namespace json {
 }%%
 
 /// Allows lazy evaluation of number types
-class JSONNumberInfo {
+class NumberInfo {
  private:
   bool _intIsNeg;
   unsigned long long _intPart;
   int _expPart;
 
  public:
-  JSONNumberInfo(bool intIsNeg, unsigned long long intPart, int expPart)
+  NumberInfo(bool intIsNeg, unsigned long long intPart, int expPart)
       : _intIsNeg(intIsNeg), _intPart(intPart), _expPart(expPart) {}
 
   template <typename NumberType>
@@ -70,9 +70,9 @@ class JSONNumberInfo {
   operator unsigned char() { return value<unsigned char>(); }
 };
 
-/// tparam P the JSONParser specialization that we refer to
+/// tparam P the Parser specialization that we refer to
 template <typename P, typename T=typename P::iterator>
-class JSONParserError : public std::runtime_error {
+class ParserError : public std::runtime_error {
 private:
   static std::string make_msg(const std::string &msg, int row, int col) {
 #ifndef NO_LOCATIONS
@@ -87,18 +87,18 @@ private:
 
  public:
 #ifndef NO_LOCATIONS
-   JSONParserError(const std::string &msg, int row, int col)
+   ParserError(const std::string &msg, int row, int col)
        : std::runtime_error(make_msg(msg, row, col)), row(row), col(col)  {}
   const int row;
   const int col;
 #else
-   JSONParserError(const std::string &msg)
+   ParserError(const std::string &msg)
        : std::runtime_error(make_msg(msg)) {}
 #endif
 };
 
 /** tparam An iterator that returns chars **/
-template <typename T = const char *> class JSONParser {
+template <typename T = const char *> class Parser {
 public:
   enum JSONType {
     null = 'n',
@@ -110,11 +110,11 @@ public:
     HIT_END = 0,
     ERROR = 'x'
   };
-  using MyType = JSONParser<T>;
+  using MyType = Parser<T>;
   using iterator = T;
-  using Error = JSONParserError<MyType>;
+  using Error = ParserError<MyType>;
 #ifndef NO_LOCATIONS
-  friend class JSONParserError<MyType>;
+  friend class ParserError<MyType>;
 #endif
 
 private:
@@ -274,9 +274,9 @@ private:
 public:
   /// @param json - KEEP THIS STRING ALIVE .. WE DONT COPY IT .. WE USE IT ..
   /// You can't just call it with an ("inplace string")
-  JSONParser(T json, T end, bool skipOverErrors = false)
+  Parser(T json, T end, bool skipOverErrors = false)
       : p(json), pe(end), eof(pe), skipOverErrors(skipOverErrors) {}
-  JSONParser(const JSONParser &original)
+  Parser(const Parser &original)
       : p(original.p), pe(original.pe), eof(original.eof),
         skipOverErrors(original.skipOverErrors) {}
 
@@ -416,10 +416,10 @@ public:
     int expPart2 = 0; // The explicit exponent part from the number itself,
                       // added to the inferred exponent part
     bool gotAtLeastOneDigit = false;
-    auto makeJSONNumber =
+    auto makeNumber =
         [&expIsNeg, &expPart1, &expPart2, &intIsNeg, &intPart]() {
       long expPart = expIsNeg ? expPart1 - expPart2 : expPart1 + expPart2;
-      return JSONNumberInfo(intIsNeg, intPart, expPart);
+      return NumberInfo(intIsNeg, intPart, expPart);
     };
     %%machine number;
     int startState =
@@ -431,7 +431,7 @@ public:
     }%%
     // The state machine returns, so the code will only get here if it can't
     // parse the string
-    if (gotAtLeastOneDigit) return makeJSONNumber();
+    if (gotAtLeastOneDigit) return makeNumber();
     else handleError("Couldn't read a number");
     return N();
   }
@@ -484,18 +484,18 @@ public:
     **/
   void consumeOneValue() {
     switch (getNextType()) {
-    case JSONParser::null:
+    case Parser::null:
       readNull();
       return;
-    case JSONParser::boolean:
+    case Parser::boolean:
       readBoolean();
       return;
-    case JSONParser::array:
+    case Parser::array:
       do {
         consumeOneValue();
       } while (doIHaveMoreArray());
       return;
-    case JSONParser::object:
+    case Parser::object:
       do {
         if (!findNextAttribute())
           break;
@@ -503,15 +503,15 @@ public:
         consumeOneValue();
       } while (doIHaveMoreObject());
       return;
-    case JSONParser::number:
+    case Parser::number:
       readNumber<long double>();
       return;
-    case JSONParser::string:
+    case Parser::string:
       readString();
       return;
-    case JSONParser::HIT_END:
+    case Parser::HIT_END:
       return;
-    case JSONParser::ERROR:
+    case Parser::ERROR:
       return; // Code should never hit here
     };
   }

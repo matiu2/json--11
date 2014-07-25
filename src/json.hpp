@@ -16,18 +16,18 @@ namespace json {
 
 JSON read(std::istream &in, bool skipOverErrors = false) {
   using Iterator = std::istream_iterator<char>;
-  JSONParser<Iterator> parser(Iterator(in), Iterator(), skipOverErrors);
+  Parser<Iterator> parser(Iterator(in), Iterator(), skipOverErrors);
   return read(parser);
 }
 
 JSON read(const std::string &in, bool skipOverErrors = false) {
-  JSONParser<std::string::const_iterator> parser(in.cbegin(), in.cend(), skipOverErrors);
+  Parser<std::string::const_iterator> parser(in.cbegin(), in.cend(), skipOverErrors);
   return read(parser);
 }
 
 template<typename T>
 JSON read(T begin, T end, bool skipOverErrors = false) {
-  JSONParser<T> parser(begin, end, skipOverErrors);
+  Parser<T> parser(begin, end, skipOverErrors);
   return read(parser);
 }
 
@@ -43,7 +43,7 @@ using LocStreamIterator = LocatingIterator<StreamIterator>;
 using LocStreamIterator = StreamIterator
 #endif
 std::pair<JSON, LocStreamIterator> readWithPos(std::istream &in, bool skipOverErrors = false) {
-  JSONParser<StreamIterator> parser(StreamIterator(in), StreamIterator(), skipOverErrors);
+  Parser<StreamIterator> parser(StreamIterator(in), StreamIterator(), skipOverErrors);
   JSON&& result(read(parser));
   auto p = parser.json();
   return make_pair(result, p);
@@ -55,7 +55,7 @@ using LocStringIterator = LocatingIterator<std::string::const_iterator>;
 using LocStringIterator = std::string::const_iterator;
 #endif
 std::pair<JSON, LocStringIterator> readWithPos(const std::string &in, bool skipOverErrors = false) {
-  JSONParser<std::string::const_iterator> parser(in.cbegin(), in.cend(), skipOverErrors);
+  Parser<std::string::const_iterator> parser(in.cbegin(), in.cend(), skipOverErrors);
   JSON&& result(read(parser));
   auto p = parser.json();
   return make_pair(result, p);
@@ -69,7 +69,7 @@ std::pair<JSON, LocatingIterator<T>> readWithPos(T begin, T end,
 template <typename T>
 std::pair<JSON, T> readWithPos(T begin, T end, bool skipOverErrors = false) {
 #endif
-  JSONParser<T> parser(begin, end, skipOverErrors);
+  Parser<T> parser(begin, end, skipOverErrors);
   JSON &&result(read(parser));
   auto p = parser.json();
   return make_pair(result, p);
