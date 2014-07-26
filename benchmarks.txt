@@ -6,3 +6,8 @@
 
  * Debug: 6.7 s
  * Release: 2.3
+
+# Full parse with 128 byte reservation for each string
+
+ * Release: 1.8
+

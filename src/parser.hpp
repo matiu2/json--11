@@ -607,8 +607,9 @@ case 8:
     wchar_t uniChar = 0;
     int uniCharBytes = 0;
     std::string output;
+    output.reserve(128);
     
-#line 612 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 613 "/home/matiu/projects/json++11/src/parser.hpp"
 	{
 	if ( p == pe )
 		goto _test_eof;
@@ -684,7 +685,7 @@ st1:
 	if ( ++p == pe )
 		goto _test_eof1;
 case 1:
-#line 688 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 689 "/home/matiu/projects/json++11/src/parser.hpp"
 	switch( (*p) ) {
 		case 34: goto tr1;
 		case 92: goto st2;
@@ -746,7 +747,7 @@ st5:
 	if ( ++p == pe )
 		goto _test_eof5;
 case 5:
-#line 750 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 751 "/home/matiu/projects/json++11/src/parser.hpp"
 	goto st0;
 st0:
 cs = 0;
@@ -795,7 +796,7 @@ st2:
 	if ( ++p == pe )
 		goto _test_eof2;
 case 2:
-#line 799 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 800 "/home/matiu/projects/json++11/src/parser.hpp"
 	switch( (*p) ) {
 		case 98: goto tr3;
 		case 102: goto tr4;
@@ -816,7 +817,7 @@ st3:
 	if ( ++p == pe )
 		goto _test_eof3;
 case 3:
-#line 820 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 821 "/home/matiu/projects/json++11/src/parser.hpp"
 	if ( (*p) < 65 ) {
 		if ( 48 <= (*p) && (*p) <= 57 )
 			goto tr9;
@@ -845,7 +846,7 @@ st4:
 	if ( ++p == pe )
 		goto _test_eof4;
 case 4:
-#line 849 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 850 "/home/matiu/projects/json++11/src/parser.hpp"
 	switch( (*p) ) {
 		case 34: goto tr12;
 		case 92: goto tr13;
@@ -870,7 +871,7 @@ case 4:
 	_out: {}
 	}
 
-#line 449 "/home/matiu/projects/json++11/src/json.rl"
+#line 450 "/home/matiu/projects/json++11/src/json.rl"
 
     // The state machine returns, so the code will only get here if it can't
     // parse the string

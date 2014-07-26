@@ -444,6 +444,7 @@ public:
     wchar_t uniChar = 0;
     int uniCharBytes = 0;
     std::string output;
+    output.reserve(128);
     %%{
         write exec;
     }%%
