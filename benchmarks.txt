@@ -1,0 +1,8 @@
+# Python:
+
+ * Python: 1.2 s (python version is what we're aiming to beat)
+
+# Full parse (currently inhibited by getmem for each string):
+
+ * Debug: 6.7 s
+ * Release: 2.3
