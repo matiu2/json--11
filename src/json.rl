@@ -437,6 +437,17 @@ public:
   }
 
   std::string readString() {
+    // Pass 1 get the length
+    size_t len = 0;
+    auto tmp = p;
+    while (tmp != pe) {
+        if (*tmp == '"')
+            break;
+        if (*tmp == '\\')
+            ++tmp;
+        ++tmp;
+        ++len;
+    }
     %%machine string;
     int startState = %%write start;
     ;
@@ -444,7 +455,7 @@ public:
     wchar_t uniChar = 0;
     int uniCharBytes = 0;
     std::string output;
-    output.reserve(128);
+    output.reserve(len);
     %%{
         write exec;
     }%%

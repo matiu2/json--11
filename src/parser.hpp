@@ -596,20 +596,31 @@ case 8:
   }
 
   std::string readString() {
+    // Pass 1 get the length
+    size_t len = 0;
+    auto tmp = p;
+    while (tmp != pe) {
+        if (*tmp == '"')
+            break;
+        if (*tmp == '\\')
+            ++tmp;
+        ++tmp;
+        ++len;
+    }
     
-#line 441 "/home/matiu/projects/json++11/src/json.rl"
+#line 452 "/home/matiu/projects/json++11/src/json.rl"
     int startState = 
-#line 603 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 614 "/home/matiu/projects/json++11/src/parser.hpp"
 1
-#line 442 "/home/matiu/projects/json++11/src/json.rl"
+#line 453 "/home/matiu/projects/json++11/src/json.rl"
     ;
     int cs = startState; // Current state
     wchar_t uniChar = 0;
     int uniCharBytes = 0;
     std::string output;
-    output.reserve(128);
+    output.reserve(len);
     
-#line 613 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 624 "/home/matiu/projects/json++11/src/parser.hpp"
 	{
 	if ( p == pe )
 		goto _test_eof;
@@ -685,7 +696,7 @@ st1:
 	if ( ++p == pe )
 		goto _test_eof1;
 case 1:
-#line 689 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 700 "/home/matiu/projects/json++11/src/parser.hpp"
 	switch( (*p) ) {
 		case 34: goto tr1;
 		case 92: goto st2;
@@ -747,7 +758,7 @@ st5:
 	if ( ++p == pe )
 		goto _test_eof5;
 case 5:
-#line 751 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 762 "/home/matiu/projects/json++11/src/parser.hpp"
 	goto st0;
 st0:
 cs = 0;
@@ -796,7 +807,7 @@ st2:
 	if ( ++p == pe )
 		goto _test_eof2;
 case 2:
-#line 800 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 811 "/home/matiu/projects/json++11/src/parser.hpp"
 	switch( (*p) ) {
 		case 98: goto tr3;
 		case 102: goto tr4;
@@ -817,7 +828,7 @@ st3:
 	if ( ++p == pe )
 		goto _test_eof3;
 case 3:
-#line 821 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 832 "/home/matiu/projects/json++11/src/parser.hpp"
 	if ( (*p) < 65 ) {
 		if ( 48 <= (*p) && (*p) <= 57 )
 			goto tr9;
@@ -846,7 +857,7 @@ st4:
 	if ( ++p == pe )
 		goto _test_eof4;
 case 4:
-#line 850 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 861 "/home/matiu/projects/json++11/src/parser.hpp"
 	switch( (*p) ) {
 		case 34: goto tr12;
 		case 92: goto tr13;
@@ -871,7 +882,7 @@ case 4:
 	_out: {}
 	}
 
-#line 450 "/home/matiu/projects/json++11/src/json.rl"
+#line 461 "/home/matiu/projects/json++11/src/json.rl"
 
     // The state machine returns, so the code will only get here if it can't
     // parse the string
