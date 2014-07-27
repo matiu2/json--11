@@ -15,4 +15,7 @@
 
  * Release: 1.8
 
+# Two pass, to get the length for the string .. without location tracking
+
+ * Release: 1.1
 

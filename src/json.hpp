@@ -40,7 +40,7 @@ using StreamIterator=std::istream_iterator<char>;
 #ifndef NO_LOCATIONS
 using LocStreamIterator = LocatingIterator<StreamIterator>;
 #else
-using LocStreamIterator = StreamIterator
+using LocStreamIterator = StreamIterator;
 #endif
 std::pair<JSON, LocStreamIterator> readWithPos(std::istream &in, bool skipOverErrors = false) {
   Parser<StreamIterator> parser(StreamIterator(in), StreamIterator(), skipOverErrors);

@@ -1,6 +1,5 @@
 /// A quick benchmark program. Reads test_input and extracts on value from it
-// Not storing the location of errors speeds things up, but it's not fair to the whatever we're comparing it to :p
-//#define NO_LOCATIONS
+#define NO_LOCATIONS
 #include "json.hpp"
 
 #include <fstream>

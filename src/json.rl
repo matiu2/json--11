@@ -74,16 +74,16 @@ class NumberInfo {
 template <typename P, typename T=typename P::iterator>
 class ParserError : public std::runtime_error {
 private:
-  static std::string make_msg(const std::string &msg, int row, int col) {
 #ifndef NO_LOCATIONS
+  static std::string make_msg(const std::string &msg, int row, int col) {
     std::stringstream result;
     result << msg << " at row " << row << " col " << col;
     // return msg + " at " + location;
     return result.str();
-#else
-    return msg;
-#endif
   }
+#else
+  static std::string make_msg(const std::string &msg) { return msg; }
+#endif
 
  public:
 #ifndef NO_LOCATIONS
@@ -151,7 +151,7 @@ private:
             p.row, p.col);
 #else
         throw Error(
-            "Couldn't find '" + c + "' to signify the start of an attribute value");
+            std::string("Couldn't find '") + c + "' to signify the start of an attribute value");
 #endif
       }
     }
@@ -187,7 +187,7 @@ private:
             p.row, p.col);
 #else
         throw Error(
-            "Couldn't find '" + c + "' to signify the start of an attribute value");
+            std::string("Couldn't find '") + c + "' to signify the start of an attribute value");
 #endif
       }
     }
@@ -437,17 +437,6 @@ public:
   }
 
   std::string readString() {
-    // Pass 1 get the length
-    size_t len = 0;
-    auto tmp = p;
-    while (tmp != pe) {
-        if (*tmp == '"')
-            break;
-        if (*tmp == '\\')
-            ++tmp;
-        ++tmp;
-        ++len;
-    }
     %%machine string;
     int startState = %%write start;
     ;
@@ -455,7 +444,6 @@ public:
     wchar_t uniChar = 0;
     int uniCharBytes = 0;
     std::string output;
-    output.reserve(len);
     %%{
         write exec;
     }%%

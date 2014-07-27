@@ -65,16 +65,16 @@ class NumberInfo {
 template <typename P, typename T=typename P::iterator>
 class ParserError : public std::runtime_error {
 private:
-  static std::string make_msg(const std::string &msg, int row, int col) {
 #ifndef NO_LOCATIONS
+  static std::string make_msg(const std::string &msg, int row, int col) {
     std::stringstream result;
     result << msg << " at row " << row << " col " << col;
     // return msg + " at " + location;
     return result.str();
-#else
-    return msg;
-#endif
   }
+#else
+  static std::string make_msg(const std::string &msg) { return msg; }
+#endif
 
  public:
 #ifndef NO_LOCATIONS
@@ -142,7 +142,7 @@ private:
             p.row, p.col);
 #else
         throw Error(
-            "Couldn't find '" + c + "' to signify the start of an attribute value");
+            std::string("Couldn't find '") + c + "' to signify the start of an attribute value");
 #endif
       }
     }
@@ -178,7 +178,7 @@ private:
             p.row, p.col);
 #else
         throw Error(
-            "Couldn't find '" + c + "' to signify the start of an attribute value");
+            std::string("Couldn't find '") + c + "' to signify the start of an attribute value");
 #endif
       }
     }
@@ -596,31 +596,19 @@ case 8:
   }
 
   std::string readString() {
-    // Pass 1 get the length
-    size_t len = 0;
-    auto tmp = p;
-    while (tmp != pe) {
-        if (*tmp == '"')
-            break;
-        if (*tmp == '\\')
-            ++tmp;
-        ++tmp;
-        ++len;
-    }
     
-#line 452 "/home/matiu/projects/json++11/src/json.rl"
+#line 441 "/home/matiu/projects/json++11/src/json.rl"
     int startState = 
-#line 614 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 603 "/home/matiu/projects/json++11/src/parser.hpp"
 1
-#line 453 "/home/matiu/projects/json++11/src/json.rl"
+#line 442 "/home/matiu/projects/json++11/src/json.rl"
     ;
     int cs = startState; // Current state
     wchar_t uniChar = 0;
     int uniCharBytes = 0;
     std::string output;
-    output.reserve(len);
     
-#line 624 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 612 "/home/matiu/projects/json++11/src/parser.hpp"
 	{
 	if ( p == pe )
 		goto _test_eof;
@@ -696,7 +684,7 @@ st1:
 	if ( ++p == pe )
 		goto _test_eof1;
 case 1:
-#line 700 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 688 "/home/matiu/projects/json++11/src/parser.hpp"
 	switch( (*p) ) {
 		case 34: goto tr1;
 		case 92: goto st2;
@@ -758,7 +746,7 @@ st5:
 	if ( ++p == pe )
 		goto _test_eof5;
 case 5:
-#line 762 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 750 "/home/matiu/projects/json++11/src/parser.hpp"
 	goto st0;
 st0:
 cs = 0;
@@ -807,7 +795,7 @@ st2:
 	if ( ++p == pe )
 		goto _test_eof2;
 case 2:
-#line 811 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 799 "/home/matiu/projects/json++11/src/parser.hpp"
 	switch( (*p) ) {
 		case 98: goto tr3;
 		case 102: goto tr4;
@@ -828,7 +816,7 @@ st3:
 	if ( ++p == pe )
 		goto _test_eof3;
 case 3:
-#line 832 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 820 "/home/matiu/projects/json++11/src/parser.hpp"
 	if ( (*p) < 65 ) {
 		if ( 48 <= (*p) && (*p) <= 57 )
 			goto tr9;
@@ -857,7 +845,7 @@ st4:
 	if ( ++p == pe )
 		goto _test_eof4;
 case 4:
-#line 861 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 849 "/home/matiu/projects/json++11/src/parser.hpp"
 	switch( (*p) ) {
 		case 34: goto tr12;
 		case 92: goto tr13;
@@ -882,7 +870,7 @@ case 4:
 	_out: {}
 	}
 
-#line 461 "/home/matiu/projects/json++11/src/json.rl"
+#line 449 "/home/matiu/projects/json++11/src/json.rl"
 
     // The state machine returns, so the code will only get here if it can't
     // parse the string
