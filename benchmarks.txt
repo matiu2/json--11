@@ -19,3 +19,6 @@
 
  * Release: 1.1
 
+# Two pass, using explicit inline on the location iterator
+
+ * Release: 1.2
