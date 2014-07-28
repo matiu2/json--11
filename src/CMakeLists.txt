@@ -40,4 +40,5 @@ add_custom_target(
 add_executable(tests tests.cpp)
 add_executable(benchmark benchmark.cpp)
 file(COPY benchmark.json benchmark.py DESTINATION .)
+add_executable(quickBenchmark quickBenchmark.cpp)
 add_test(tests tests)

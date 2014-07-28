@@ -335,7 +335,7 @@ go_bandit([]() {
       AssertThat(
           LastException<Error>().what(),
           Equals(
-              "Expected a ',' or a ']' but hit a '4' instead at row 1 col 10"));
+              "Expected ',' but got '0' instead at row 1 col 10"));
       AssertThat(LastException<Error>().row, Equals(1));
       AssertThat(LastException<Error>().col, Equals(10));
 #endif
@@ -349,7 +349,7 @@ go_bandit([]() {
       AssertThat(
           LastException<Error>().what(),
           Equals(
-              "Expected a ',' or a ']' but hit the end of the input at row 1 col 9"));
+              "Hit end of stream while expecting token at row 1 col 9"));
       AssertThat(LastException<Error>().row, Equals(1));
       AssertThat(LastException<Error>().col, Equals(9));
 #endif
@@ -373,10 +373,9 @@ go_bandit([]() {
       using Error = Parser<std::string::const_iterator>::Error;
       AssertThrows(Error, read(json));
 #ifndef NO_LOCATIONS
-      AssertThat(LastException<Error>().what(),
-                 Equals(
-                     R"(hit end while looking for '"' to signify the start of )"
-                     R"(an attribute value at row 1 col 2)"));
+      AssertThat(
+          LastException<Error>().what(),
+          Equals("Hit end of stream while expecting token at row 1 col 2"));
       AssertThat(LastException<Error>().row, Equals(1));
       AssertThat(LastException<Error>().col, Equals(2));
 #endif
@@ -405,7 +404,17 @@ go_bandit([]() {
       AssertThat(output.str(), Equals("{}"));
     });
 
-    it("4.17. Can read input with whitespace", [&]() {
+    it("4.17. Can read an empty array with whitespace", [&]() {
+      std::string json("       [ \n  ]  ");
+      JSON j = read(json);
+      AssertThat(j.isNull(), Equals(false));
+      AssertThat(j.whatIs(), Equals(JSON::list));
+      AssertThat(static_cast<JList&>(j), Equals(JList()));
+      output << j;
+      AssertThat(output.str(), Equals("[]"));
+    });
+
+    it("4.18. Can read input with whitespace", [&]() {
         const char* end = sample2 + strlen(sample2);
         JSON json = read(sample2, end);
         const std::string& len = json["headers"]["Content-Length"];

@@ -230,12 +230,15 @@ std::ostream &operator<<(ostream &s, const JList &j) {
   s << '[';
   auto entry = j.cbegin();
   auto end = j.cend();
-  --end; // Second to last one so that we don't put a comma after the last one
-  while (entry != end) {
-    s << *entry << ',';
-    ++entry;
+  if (entry != end) {
+    --end; // Second to last one so that we don't put a comma after the last one
+    while (entry != end) {
+      s << *entry << ',';
+      ++entry;
+    }
+    s << *entry;
   }
-  s << *entry << ']';
+  s << ']';
   return s;
 }
 

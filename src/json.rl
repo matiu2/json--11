@@ -100,14 +100,18 @@ private:
 /** tparam An iterator that returns chars **/
 template <typename T = const char *> class Parser {
 public:
-  enum JSONType {
+  enum JSONToken {
+    HIT_END = 0,
+    COMMA = ',',
+    COLON = ':',
     null = 'n',
     boolean = 't',
     array = '[',
+    ARRAY_END = ']',
     object = '{',
+    OBJECT_END = '}',
     number = '0',
     string = '"',
-    HIT_END = 0,
     ERROR = 'x'
   };
   using MyType = Parser<T>;
@@ -130,113 +134,6 @@ private:
 #endif
   // Our vars
   bool skipOverErrors;
-
-  /// Searches though whitespace for a @a c meaning the start of an attribute
-  /// name
-  template<char c>
-  char scanWSFor() {
-    while ((p != pe) && (p != eof)) {
-      switch (*p++) {
-      case 9:
-      case 10:
-      case 13:
-      case ' ':
-        continue;
-      case c:
-        return c;
-      default:
-#ifndef NO_LOCATIONS
-        throw Error(
-            std::string("Couldn't find '") + c + "' to signify the start of an attribute value",
-            p.row, p.col);
-#else
-        throw Error(
-            std::string("Couldn't find '") + c + "' to signify the start of an attribute value");
-#endif
-      }
-    }
-#ifndef NO_LOCATIONS
-    throw Error(std::string("hit end while looking for '") + c + "' to signify the start of an "
-                "attribute value",
-                p.row, p.col);
-#else
-    throw Error(std::string("hit end while looking for '") + c + "' to signify the start of an "
-                "attribute value");
-#endif
-  }
-
-  /// Searches though whitespace for a @a c meaning the start of an attribute
-  /// name or @e meaning the 'end' of the range
-  template<char c, char e>
-  char scanWSFor() {
-    while ((p != pe) && (p != eof)) {
-      switch (*p++) {
-      case 9:
-      case 10:
-      case 13:
-      case ' ':
-        continue;
-      case c:
-        return c;
-      case e:
-        return e;
-      default:
-#ifndef NO_LOCATIONS
-        throw Error(
-            std::string("Couldn't find '") + c + "' to signify the start of an attribute value",
-            p.row, p.col);
-#else
-        throw Error(
-            std::string("Couldn't find '") + c + "' to signify the start of an attribute value");
-#endif
-      }
-    }
-#ifndef NO_LOCATIONS
-    throw Error(std::string("hit end while looking for '") + c + "' to signify the start of an "
-                "attribute value",
-                p.row, p.col);
-#else
-    throw Error(std::string("hit end while looking for '") + c + "' to signify the start of an "
-                "attribute value");
-#endif
-  }
-
-  /**
-  * If 'skipOverErrors' is false, throws a Error, otherwise just returns.
-  * Context is automatically passed to the Error object.
-  *
-  * @param message The error message to show
-  */
-  void handleError(const std::string &message) {
-    if (skipOverErrors) {
-      // Skip Forward until we find a new type
-      while (p != pe) {
-        switch (getNextType(true)) {
-        case number:
-          return;
-        case ERROR:
-          ++p;
-          continue;
-        case HIT_END:
-          // We have to raise an error here. There's no way we can skip
-          // forward anymore
-#ifndef NO_LOCATIONS
-          throw Error(std::string("Hit end: ") + message, p.row, p.col);
-#else
-          throw Error(std::string("Hit end: ") + message);
-#endif
-        default:
-          return;
-        }
-      }
-    } else {
-#ifndef NO_LOCATIONS
-      throw Error(message, p.row, p.col);
-#else
-      throw Error(message);
-#endif
-    }
-  }
 
   /**
   * Tests a null terminated C string. If we reach the null char .. just returns.
@@ -281,30 +178,67 @@ public:
         skipOverErrors(original.skipOverErrors) {}
 
   /**
+  * If 'skipOverErrors' is false, throws a Error, otherwise just returns.
+  * Context is automatically passed to the Error object.
+  *
+  * @param message The error message to show
+  */
+  void handleError(const std::string &message) {
+    if (skipOverErrors) {
+      // Skip Forward until we find a new type
+      while (p != pe) {
+        switch (getNextToken(true)) {
+        case number:
+          return;
+        case ERROR:
+          ++p;
+          continue;
+        case HIT_END:
+          // We have to raise an error here. There's no way we can skip
+          // forward anymore
+#ifndef NO_LOCATIONS
+          throw Error(std::string("Hit end: ") + message, p.row, p.col);
+#else
+          throw Error(std::string("Hit end: ") + message);
+#endif
+        default:
+          return;
+        }
+      }
+    } else {
+#ifndef NO_LOCATIONS
+      throw Error(message, p.row, p.col);
+#else
+      throw Error(message);
+#endif
+    }
+  }
+  /**
   * Eats whitespace, then tells you the next type found in the JSON stream.
   * It eats the first letter for all types except number.
   *
   * @param returnError defaults to False .. true is used internally when
-  *getNextType() is called by handleError()
-  *                    Causes the func to return the ERROR or HIT_END JSONTypes
-  *instead of throwing an exception on syntax errors or hitting the end of the
-  *stream
+  *                    getNextToken() is called by handleError()
+  * Causes the func to return the ERROR or HIT_END JSONTokens
+  * instead of throwing an exception on syntax errors or hitting the end of the
+  * stream
   *
   * # Matrix of parameter values for returnErrors and ::skipOverErrors
   *
   *    returnError - skipOverErrors - behaviour on syntax error - on end of
-  *stream
+  *                                                               stream
   *      true      -   true         - returns ERROR             - returns
-  *HIT_END
+  *                                                               HIT_END
   *      true      -   false        - returns ERROR             - returns
-  *HIT_END
-  *      false     -   true         - skips forward until next type and returns
-  *that - returns HIT_END
+  *                                                               HIT_END
+  *      false     -   true         - skips forward             - returns HIT_END
+  *                                   until next type
+  *                                   and returns that
   *      false     -   false        - throws Error              - throws Error
   *
-  * @return the 'JSONType' found,
+  * @return the 'JSONToken' found,
   */
-  JSONType getNextType(bool returnError = false) {
+  JSONToken getNextToken(bool returnError = false) {
     while ((p != pe) && (p != eof)) {
       switch ((*p)) {
       case 9:
@@ -316,6 +250,12 @@ public:
       case '"':
         ++p;
         return string;
+      case ',':
+        ++p;
+        return COMMA;
+      case ':':
+        ++p;
+        return COLON;
       case '-':
       case '0':
       case '1':
@@ -332,6 +272,9 @@ public:
       case '[':
         ++p;
         return array;
+      case ']':
+        ++p;
+        return ARRAY_END;
       case 'f':
         ++p;
         return boolean;
@@ -344,6 +287,9 @@ public:
       case '{':
         ++p;
         return object;
+      case '}':
+        ++p;
+        return OBJECT_END;
       default: {
         // If we got here, it's because we hit the end of the stream, or found
         // an unexpected character in the json stream;
@@ -364,10 +310,7 @@ public:
     // We hit the end of the stream
     if (!returnError)
       handleError(
-          "Hit end of stream while trying to identify next JSON type"); // Either
-                                                                        // logs
-                                                                        // or
-    // throws
+          "Hit end of stream while expecting token");
     return HIT_END; // We have to return something .. even if returnError is
                     // false
   }
@@ -376,7 +319,7 @@ public:
 
   /**
   * Read a boolean value, either 'true' or 'false'. Assume's you've already
-  *found it with 'getNextType'
+  *found it with 'getNextToken'
   *
   * @return The value of the boolean read.
   */
@@ -453,125 +396,77 @@ public:
     return output;
   }
 
-  /**
-  * @brief checks if we have more array items to read
-  *
-  * @return true if there are more array to read; false if we've hit the end;
-  *throw's for unexpected hit
-  */
-  bool doIHaveMoreArray() { return doIHaveMore<']'>(); }
-
-  /// Finds the next attribute in a dictionary. Puts us just after the '"' of
-  /// the attribute name, or at the '}' at the end of a dict. @returns true if
-  /// it finds the attribute; false if we're at the end of the dict
-  bool findNextAttribute() {
-    constexpr char end('}');
-    char c = scanWSFor<'"', end>();
-    return (c != end);
-  }
-
-  /**
-  * @brief While reading an object .. get the next attribute name
-  */
-  std::string readNextAttribute() {
-    std::string output = readString();
-    scanWSFor<':'>();
-    return output;
-  }
-
-  /**
-    * Consumes and throws away one value
-    **/
-  void consumeOneValue() {
-    switch (getNextType()) {
-    case Parser::null:
-      readNull();
-      return;
-    case Parser::boolean:
-      readBoolean();
-      return;
-    case Parser::array:
-      do {
-        consumeOneValue();
-      } while (doIHaveMoreArray());
-      return;
-    case Parser::object:
-      do {
-        if (!findNextAttribute())
-          break;
-        readNextAttribute();
-        consumeOneValue();
-      } while (doIHaveMoreObject());
-      return;
-    case Parser::number:
-      readNumber<long double>();
-      return;
-    case Parser::string:
-      readString();
-      return;
-    case Parser::HIT_END:
-      return;
-    case Parser::ERROR:
-      return; // Code should never hit here
-    };
-  }
-
-  /**
-  * Reads through whitespace, return true if it hits @a separator first, false
-  * if it hits @a end first.
-  * If it hits the separator, it consumes it, so you can readily read the next
-  * value.
-  *
-  * If it hits anything other than separator, whitespace, or end, it calls
-  * handleError and returns 'false' if not configured to throw exceptions.
-  * (see  handleError() for more info)
-  *
-  * @tparam end The character that means we hit the end, no more to come
-  * @tparam separator The character that means we have more to come
-  *
-  * @return returns true if we can expect more input, false if we just hit the
-  *end
-  */
-  template <char end, char separator = ','> bool doIHaveMore() {
-    struct BadChar {};
-    try {
-      while ((p != pe) && (p != eof)) {
-        switch (*p) {
-        case 9:
-        case 10:
-        case 13:
-        case ' ':
-          ++p;
-          continue;
-        case separator:
-          ++p;
-          return true;
-        case end:
-          ++p;
-          return false;
-        default:
-          throw BadChar();
-        }
-      }
-    } catch (BadChar) {
-      handleError(std::string("Expected a '") + separator + "' or a '" + end +
-                  "' but hit a '" + *p + "' instead");
+  /// @returns true if you got the type you wanted
+  bool expect(JSONToken expected, JSONToken got) {
+    if (expected != got) {
+      std::stringstream msg;
+      if (got == HIT_END)
+        msg << "Expected '" << (char)expected << "' but hit the end of input";
+      else
+        msg << "Expected '" << (char)expected << "' but got '" << (char)got << "' instead";
+      handleError(msg.str());
       return false;
     }
-    handleError(std::string("Expected a '") + separator + "' or a '" + end +
-                "' but hit the end of the input");
+    return true;
+  }
+
+  /// @returns true if you got the type you wanted
+  bool expectAnyRealType(JSONToken got) {
+    switch (got) {
+    case null:
+    case boolean:
+    case array:
+    case object:
+    case number:
+    case string:
+      return true;
+    default: {
+      std::stringstream msg;
+      if (got == HIT_END)
+        msg << "Expected any real json type but hit the end of input";
+      else
+        msg << "Expected any real json type but got '" << (char)got << "' instead";
+      handleError(msg.str());
+    }
+    };
     return false;
   }
 
   /**
-  * @brief While reading an object .. returns true if there is more to read.
-  *Also moves us forward in the parsing.
-  *
-  * @return true if there is more Object to read
-  */
-  bool doIHaveMoreAttributes() { return doIHaveMore<'}'>(); }
-  /// Use just after reading the start of an object. @returns true if there are any object attributes
-  bool doIHaveMoreObject() { return doIHaveMore<'}', '"'>(); }
+    * Consumes and throws away one value
+    * @returns the type that it consumed
+    **/
+  JSONToken consumeOneValue(JSONToken alreadyGotType = HIT_END) {
+    JSONToken result =
+        alreadyGotType == HIT_END ? getNextToken() : alreadyGotType;
+    switch (result) {
+    case JSONToken::null:
+      readNull();
+      return result;
+    case JSONToken::boolean:
+      readBoolean();
+      return result;
+    case JSONToken::array: {
+      readArray(std::bind(this, &MyType::consumeOneValue));
+      return result;
+    }
+    case JSONToken::object: {
+      auto throwAwayAttr = [](std::string &&) {};
+      readObject(throwAwayAttr, std::bind(this, &MyType::consumeOneValue));
+      return result;
+    }
+    case JSONToken::number:
+      readNumber<long double>();
+      return result;
+    case JSONToken::string:
+      readString();
+      return result;
+    case JSONToken::HIT_END:
+      return result;
+    case JSONToken::ERROR:
+      return result; // Code should never hit here
+    };
+  }
 
   /// Returns the pointer to the json we are parsing
 #ifndef NO_LOCATIONS
@@ -580,58 +475,62 @@ public:
   T json() const { return p; }
 #endif
 
-  /// This is the type you can pass to 'readObject'
-  using Reader = std::function<void()>;
-  using TypeReaderPair = std::pair<JSONType, Reader>;
-  using ReaderMap = std::map<std::string, TypeReaderPair>;
-
-  /// Reads an object
-  /// @a readerMap - a map of attribute name to expected JSONType, reader
-  /// function pair.
-  /// For expample: { { "name", { JSONType::string, [&parser, &person]() {
-  /// person.setName(parser.readString()); } }}}
-  /// @returns - the number of attributes read
-  size_t readObject(const ReaderMap &readerMap) {
-    size_t attrsRead = 0;
-    // Full object
-    do {
-      if (!findNextAttribute())
+  /// Convenience function to read an array
+  /// @onVal will be read when the stream is ready to read a value. The function
+  ///        needs to consume that value from the stream.
+  void readArray(std::function<void(JSONToken)> onVal) {
+    while (true) {
+      JSONToken next = getNextToken();
+      if (next == ARRAY_END)
+          // We're done
+          break;
+      // Read the value
+      if (!expectAnyRealType(next))
         break;
-      std::string nextAttrName = readNextAttribute();
-      // See if we expected an attribute with that name
-      auto pReader = readerMap.find(nextAttrName);
-      if (pReader == readerMap.end()) {
-        consumeOneValue();
-        continue;
-      }
-      // See if the type matches what we expected
-      JSONType nextTokenType = getNextType();
-      auto pair = pReader->second;
-      auto expectedType = pair.first;
-      auto reader = pair.second;
-      if (nextTokenType != expectedType) {
-        if (nextTokenType == JSONType::null) {
-          readNull();
-          // If we expected something and found null,
-          // We'll just pretend we didn't find it
-          // TODO: possibly make the reader() smarter and able
-          //       to be notified about finding null
-          continue;
-        }
-        std::stringstream errMsg;
-        errMsg << "When reading attribute " << nextAttrName
-               << "I expected a value of type " << expectedType
-               << "but got one of type " << nextTokenType;
-#ifndef NO_LOCATIONS
-        throw Error(errMsg.str(), p.row, p.col);
-#else
-        throw Error(errMsg.str());
-#endif
-      }
-      reader(); // Actually read in the value to the person object
-      ++attrsRead;
-    } while (doIHaveMoreAttributes());
-    return attrsRead;
+      onVal(next);
+      // Read the comma or the end of the array
+      next = getNextToken();
+      if (next == ARRAY_END)
+          // We're done
+          break;
+      if (!expect(COMMA, next))
+        // We needed a comma to continue without error
+        break;
+    }
+  }
+
+  /// Convenience function to read an object.
+  /// @onAttribute will be called when an attribute name is read
+  /// @onVal will be read when the stream is ready to read a value. The function
+  ///        needs to consume that value from the stream.
+  void readObject(std::function<void(std::string &&)> onAttribute,
+                  std::function<void(JSONToken)> onVal) {
+    while (true) {
+      JSONToken next = getNextToken();
+      // Read the attribute name or the end of the object
+      if (next == OBJECT_END)
+        // We're done
+        break;
+      if (!expect(string, next))
+        break;
+      onAttribute(readString());
+      // Read the ':' separator
+      if (!expect(COLON, getNextToken()))
+        break;
+      // Read the value
+      next = getNextToken();
+      if (!expectAnyRealType(next))
+        break;
+      onVal(next);
+      // Read the comma or the end of the object
+      next = getNextToken();
+      if (next == OBJECT_END)
+        // We're done
+        break;
+      if (!expect(COMMA, next))
+        // We needed a comma to continue without error
+        break;
+    }
   }
 };
 
