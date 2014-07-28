@@ -58,27 +58,27 @@ void parseString(const std::string& json, T& mapper, unsigned long expectedSize=
 	{
 tr0:
 #line 9 "/home/matiu/projects/json++11/src/string.rl"
-	{ output += *p; }
+	{ *out++ = *p; }
 	goto st1;
 tr3:
 #line 4 "/home/matiu/projects/json++11/src/string.rl"
-	{ output += '\b'; }
+	{ *out++ = '\b'; }
 	goto st1;
 tr4:
 #line 5 "/home/matiu/projects/json++11/src/string.rl"
-	{ output += '\f'; }
+	{ *out++ = '\f'; }
 	goto st1;
 tr5:
 #line 6 "/home/matiu/projects/json++11/src/string.rl"
-	{ output += '\n'; }
+	{ *out++ = '\n'; }
 	goto st1;
 tr6:
 #line 7 "/home/matiu/projects/json++11/src/string.rl"
-	{ output += '\r'; }
+	{ *out++ = '\r'; }
 	goto st1;
 tr7:
 #line 8 "/home/matiu/projects/json++11/src/string.rl"
-	{ output += '\t'; }
+	{ *out++ = '\t'; }
 	goto st1;
 tr11:
 #line 26 "/home/matiu/projects/json++11/src/string.rl"
@@ -95,7 +95,7 @@ tr11:
         */
         int numBytes = getNumBytes(uniChar); // number of bytes needed for utf-8 encoding
         if (numBytes == 1) {
-            output += uniChar;
+            *out++ = uniChar;
         } else {
             std::vector<char> bytes;
             for (int i=1; i<numBytes; ++i) {
@@ -116,11 +116,11 @@ tr11:
             bytes.push_back(byte);
             // Output it
             for (auto i=bytes.rbegin(); i!=bytes.rend(); ++i)
-                output += *i;
+                *out++ = *i;
         }
     }
 #line 9 "/home/matiu/projects/json++11/src/string.rl"
-	{ output += *p; }
+	{ *out++ = *p; }
 	goto st1;
 st1:
 	if ( ++p == pe )
@@ -154,7 +154,7 @@ tr12:
         */
         int numBytes = getNumBytes(uniChar); // number of bytes needed for utf-8 encoding
         if (numBytes == 1) {
-            output += uniChar;
+            *out++ = uniChar;
         } else {
             std::vector<char> bytes;
             for (int i=1; i<numBytes; ++i) {
@@ -175,7 +175,7 @@ tr12:
             bytes.push_back(byte);
             // Output it
             for (auto i=bytes.rbegin(); i!=bytes.rend(); ++i)
-                output += *i;
+                *out++ = *i;
         }
     }
 #line 63 "/home/matiu/projects/json++11/src/string.rl"
@@ -208,7 +208,7 @@ tr13:
         */
         int numBytes = getNumBytes(uniChar); // number of bytes needed for utf-8 encoding
         if (numBytes == 1) {
-            output += uniChar;
+            *out++ = uniChar;
         } else {
             std::vector<char> bytes;
             for (int i=1; i<numBytes; ++i) {
@@ -229,7 +229,7 @@ tr13:
             bytes.push_back(byte);
             // Output it
             for (auto i=bytes.rbegin(); i!=bytes.rend(); ++i)
-                output += *i;
+                *out++ = *i;
         }
     }
 	goto st2;

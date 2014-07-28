@@ -380,13 +380,16 @@ public:
   }
 
   std::string readString() {
+    std::string output;
+    output.reserve(128);
+    auto out = std::back_inserter(output);
+    /// The actual parsing code
     %%machine string;
     int startState = %%write start;
     ;
     int cs = startState; // Current state
     wchar_t uniChar = 0;
     int uniCharBytes = 0;
-    std::string output;
     %%{
         write exec;
     }%%

@@ -1,5 +1,5 @@
 /// A quick benchmark program. Reads test_input and extracts on value from it
-//#define NO_LOCATIONS
+#define NO_LOCATIONS
 #include "json.hpp"
 
 #include <fstream>
