@@ -10,29 +10,33 @@
 #include <istream>
 #include <iterator>
 #include <algorithm>
+#include <memory>
 
 
 namespace json {
 
+template <typename A=std::allocator<char>>
 JSON read(std::istream &in, bool skipOverErrors = false) {
   using Iterator = std::istream_iterator<char>;
-  Parser<Iterator> parser(Iterator(in), Iterator(), skipOverErrors);
+  Parser<Iterator, A> parser(Iterator(in), Iterator(), skipOverErrors);
   return read(parser);
 }
 
+template <typename A=std::allocator<char>>
 JSON read(const std::string &in, bool skipOverErrors = false) {
-  Parser<std::string::const_iterator> parser(in.cbegin(), in.cend(), skipOverErrors);
+  Parser<std::string::const_iterator, A> parser(in.cbegin(), in.cend(), skipOverErrors);
   return read(parser);
 }
 
-template<typename T>
+template<typename T, typename A=std::allocator<char>>
 JSON read(T begin, T end, bool skipOverErrors = false) {
-  Parser<T> parser(begin, end, skipOverErrors);
+  Parser<T, A> parser(begin, end, skipOverErrors);
   return read(parser);
 }
 
-istream& operator >>(istream& i, json::JSON& j) {
-  j = read(i);
+template<typename T, typename A=std::allocator<char>>
+istream& operator >>(istream& i, BasicJSON<T>& j) {
+  j = read<A>(i);
   return i;
 }
 

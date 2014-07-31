@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <memory>
 
 #ifndef NO_LOCATIONS
 #include "locatingIterator.hpp"
@@ -98,7 +99,7 @@ private:
 };
 
 /** tparam An iterator that returns chars **/
-template <typename T = const char *> class Parser {
+template <typename T = const char *, typename A = std::allocator<char>> class Parser {
 public:
   enum JSONToken {
     HIT_END = 0,
@@ -117,6 +118,8 @@ public:
   using MyType = Parser<T>;
   using iterator = T;
   using Error = ParserError<MyType>;
+  using Allocator = A;
+  using String = std::basic_string<char, std::char_traits<char>, A>;
 #ifndef NO_LOCATIONS
   friend class ParserError<MyType>;
 #endif
@@ -144,7 +147,7 @@ private:
   void checkStaticString(const char *test) {
     while (*test)
       if ((*test++) != (*p++))
-        handleError(std::string("Static String '") + test + "' doesn't match");
+        handleError(String("Static String '") + test + "' doesn't match");
   }
 
   /**
@@ -183,7 +186,7 @@ public:
   *
   * @param message The error message to show
   */
-  void handleError(const std::string &message) {
+  void handleError(const String &message) {
     if (skipOverErrors) {
       // Skip Forward until we find a new type
       while (p != pe) {
@@ -197,9 +200,9 @@ public:
           // We have to raise an error here. There's no way we can skip
           // forward anymore
 #ifndef NO_LOCATIONS
-          throw Error(std::string("Hit end: ") + message, p.row, p.col);
+          throw Error(std::string("Hit end: ") + std::string(message.c_str()), p.row, p.col);
 #else
-          throw Error(std::string("Hit end: ") + message);
+          throw Error(std::string("Hit end: ") + std::string(message.c_str()));
 #endif
         default:
           return;
@@ -379,8 +382,8 @@ public:
     return N();
   }
 
-  std::string readString() {
-    std::string output;
+  String readString() {
+    String output;
     output.reserve(128);
     auto out = std::back_inserter(output);
     /// The actual parsing code
@@ -454,7 +457,7 @@ public:
       return result;
     }
     case JSONToken::object: {
-      auto throwAwayAttr = [](std::string &&) {};
+      auto throwAwayAttr = [](String &&) {};
       readObject(throwAwayAttr, std::bind(this, &MyType::consumeOneValue));
       return result;
     }
@@ -506,7 +509,7 @@ public:
   /// @onAttribute will be called when an attribute name is read
   /// @onVal will be read when the stream is ready to read a value. The function
   ///        needs to consume that value from the stream.
-  void readObject(std::function<void(std::string &&)> onAttribute,
+  void readObject(std::function<void(String &&)> onAttribute,
                   std::function<void(JSONToken)> onVal) {
     while (true) {
       JSONToken next = getNextToken();
