@@ -29,9 +29,9 @@ using BasicJMap = std::map<String<A>, BasicJSON<A>>;
 template <typename A>
 struct JSONTraits {
   using String = json::String<A>;
-  using JSON = BasicJSON<std::allocator<char>>;
-  using JList = BasicJList<std::allocator<char>>;
-  using JMap = BasicJMap<std::allocator<char>>;
+  using JSON = BasicJSON<A>;
+  using JList = BasicJList<A>;
+  using JMap = BasicJMap<A>;
 };
 
 template <typename A, typename traits> struct BasicJSON {
@@ -141,8 +141,8 @@ public:
   BasicJSON(const char *val) : type(text), value{val} {}
   BasicJSON(JMap val) : type(map), value{val} {}
   BasicJSON(JList val) : type(list), value{val} {}
-  BasicJSON(const JSON &other) : type(null) { copyFromOther(other); }
-  BasicJSON(JSON &&other) noexcept : type(null) {
+  BasicJSON(const BasicJSON &other) : type(null) { copyFromOther(other); }
+  BasicJSON(BasicJSON &&other) noexcept : type(null) {
     moveFromOther(std::move(other));
   };
   ~BasicJSON() { cleanup(); }
