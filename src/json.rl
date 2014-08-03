@@ -70,6 +70,23 @@ class NumberInfo {
   operator unsigned char() { return value<unsigned char>(); }
 };
 
+template <typename T = const char *> class Parser;
+
+/// Allows lazy decoding of string types
+/// @tparam T Const Iterator type
+template <typename T>
+struct StringInfo {
+    T _begin;
+    T _end;
+    T begin() const { return _begin; }
+    T end() const { return _end; }
+    operator std::string() const {
+        Parser<T> parser(_begin, _end);
+        return parser.readString();
+    }
+};
+
+
 /// tparam P the Parser specialization that we refer to
 template <typename P, typename T=typename P::iterator>
 class ParserError : public std::runtime_error {
@@ -98,7 +115,7 @@ private:
 };
 
 /** tparam An iterator that returns chars **/
-template <typename T = const char *> class Parser {
+template <typename T> class Parser {
 public:
   enum JSONType {
     null = 'n',
@@ -451,6 +468,21 @@ public:
     // parse the string
     handleError("Couldn't read a string");
     return output;
+  }
+
+  StringInfo<iterator> readStringInfo() {
+      iterator start = p;
+      iterator i = p;
+      while (i != end) {
+          if (*i == '"')
+              break;
+          if (*i == '\\')
+              ++i; // Skip the next letter
+          ++i;     // Read the next letter
+      }
+      if (i == end)
+        handleError("Couldn't read a string");
+      return {start, i};
   }
 
   /**
