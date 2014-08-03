@@ -12,7 +12,7 @@ int main(int, char **) {
   std::stringstream input;
   input << f.rdbuf();
   // Parse it and print out check the friend's name 10k times
-  const std::string expected("DixieSims");
+  const std::string expected("Dixie Sims");
   int retval = 0;
   for (long i = 0; i < 10000; ++i) {
     json::JSON data = json::read(input.str());
@@ -20,7 +20,7 @@ int main(int, char **) {
     const json::JList &friends = outter[0]["friends"];
     for (const json::JSON &myFriend : friends) {
       if (myFriend["id"] == 1) {
-        if (static_cast<std::string>(myFriend["name"]) != expected) {
+        if (static_cast<std::string>(myFriend["name"]) == expected) {
           ++retval;
           break;
         }
