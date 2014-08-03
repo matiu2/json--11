@@ -596,19 +596,43 @@ case 8:
   }
 
   std::string readString() {
+    struct CountingIterator {
+        iterator real;
+        iterator start=real;
+        size_t size=0;
+        CountingIterator(iterator real) : real(real) {}
+        void operator ++(int) {
+            ++real;
+            ++size;
+        }
+        CountingIterator operator ++() {
+            CountingIterator now(*this);
+            ++*this;
+            return now;
+        }
+        char operator *() {
+            return *real;
+        }
+    };
     
-#line 441 "/home/matiu/projects/json++11/src/json.rl"
+#line 459 "/home/matiu/projects/json++11/src/json.rl"
     int startState = 
-#line 603 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 621 "/home/matiu/projects/json++11/src/parser.hpp"
 1
-#line 442 "/home/matiu/projects/json++11/src/json.rl"
+#line 460 "/home/matiu/projects/json++11/src/json.rl"
     ;
     int cs = startState; // Current state
     wchar_t uniChar = 0;
     int uniCharBytes = 0;
-    std::string output;
+    CountingIterator output(p);
+    std::string result;
+    auto done = [&]() {
+        result.reserve(output.size);
+        std::copy(output.start, output.real, std::back_inserter(result));
+        return result;
+    };
     
-#line 612 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 636 "/home/matiu/projects/json++11/src/parser.hpp"
 	{
 	if ( p == pe )
 		goto _test_eof;
@@ -616,27 +640,27 @@ case 8:
 	{
 tr0:
 #line 9 "/home/matiu/projects/json++11/src/string.rl"
-	{ output += *p; }
+	{ *output++ = *p; }
 	goto st1;
 tr3:
 #line 4 "/home/matiu/projects/json++11/src/string.rl"
-	{ output += '\b'; }
+	{ *output++ = '\b'; }
 	goto st1;
 tr4:
 #line 5 "/home/matiu/projects/json++11/src/string.rl"
-	{ output += '\f'; }
+	{ *output++ = '\f'; }
 	goto st1;
 tr5:
 #line 6 "/home/matiu/projects/json++11/src/string.rl"
-	{ output += '\n'; }
+	{ *output++ = '\n'; }
 	goto st1;
 tr6:
 #line 7 "/home/matiu/projects/json++11/src/string.rl"
-	{ output += '\r'; }
+	{ *output++ = '\r'; }
 	goto st1;
 tr7:
 #line 8 "/home/matiu/projects/json++11/src/string.rl"
-	{ output += '\t'; }
+	{ *output++ = '\t'; }
 	goto st1;
 tr11:
 #line 26 "/home/matiu/projects/json++11/src/string.rl"
@@ -653,7 +677,7 @@ tr11:
         */
         int numBytes = getNumBytes(uniChar); // number of bytes needed for utf-8 encoding
         if (numBytes == 1) {
-            output += uniChar;
+            *output++ = uniChar;
         } else {
             std::vector<char> bytes;
             for (int i=1; i<numBytes; ++i) {
@@ -674,17 +698,17 @@ tr11:
             bytes.push_back(byte);
             // Output it
             for (auto i=bytes.rbegin(); i!=bytes.rend(); ++i)
-                output += *i;
+                *output++ = *i;
         }
     }
 #line 9 "/home/matiu/projects/json++11/src/string.rl"
-	{ output += *p; }
+	{ *output++ = *p; }
 	goto st1;
 st1:
 	if ( ++p == pe )
 		goto _test_eof1;
 case 1:
-#line 688 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 712 "/home/matiu/projects/json++11/src/parser.hpp"
 	switch( (*p) ) {
 		case 34: goto tr1;
 		case 92: goto st2;
@@ -694,7 +718,7 @@ tr1:
 #line 63 "/home/matiu/projects/json++11/src/string.rl"
 	{
         ++p;
-        return output;
+        return done();
     }
 	goto st5;
 tr12:
@@ -712,7 +736,7 @@ tr12:
         */
         int numBytes = getNumBytes(uniChar); // number of bytes needed for utf-8 encoding
         if (numBytes == 1) {
-            output += uniChar;
+            *output++ = uniChar;
         } else {
             std::vector<char> bytes;
             for (int i=1; i<numBytes; ++i) {
@@ -733,20 +757,20 @@ tr12:
             bytes.push_back(byte);
             // Output it
             for (auto i=bytes.rbegin(); i!=bytes.rend(); ++i)
-                output += *i;
+                *output++ = *i;
         }
     }
 #line 63 "/home/matiu/projects/json++11/src/string.rl"
 	{
         ++p;
-        return output;
+        return done();
     }
 	goto st5;
 st5:
 	if ( ++p == pe )
 		goto _test_eof5;
 case 5:
-#line 750 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 774 "/home/matiu/projects/json++11/src/parser.hpp"
 	goto st0;
 st0:
 cs = 0;
@@ -766,7 +790,7 @@ tr13:
         */
         int numBytes = getNumBytes(uniChar); // number of bytes needed for utf-8 encoding
         if (numBytes == 1) {
-            output += uniChar;
+            *output++ = uniChar;
         } else {
             std::vector<char> bytes;
             for (int i=1; i<numBytes; ++i) {
@@ -787,7 +811,7 @@ tr13:
             bytes.push_back(byte);
             // Output it
             for (auto i=bytes.rbegin(); i!=bytes.rend(); ++i)
-                output += *i;
+                *output++ = *i;
         }
     }
 	goto st2;
@@ -795,7 +819,7 @@ st2:
 	if ( ++p == pe )
 		goto _test_eof2;
 case 2:
-#line 799 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 823 "/home/matiu/projects/json++11/src/parser.hpp"
 	switch( (*p) ) {
 		case 98: goto tr3;
 		case 102: goto tr4;
@@ -816,7 +840,7 @@ st3:
 	if ( ++p == pe )
 		goto _test_eof3;
 case 3:
-#line 820 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 844 "/home/matiu/projects/json++11/src/parser.hpp"
 	if ( (*p) < 65 ) {
 		if ( 48 <= (*p) && (*p) <= 57 )
 			goto tr9;
@@ -845,7 +869,7 @@ st4:
 	if ( ++p == pe )
 		goto _test_eof4;
 case 4:
-#line 849 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 873 "/home/matiu/projects/json++11/src/parser.hpp"
 	switch( (*p) ) {
 		case 34: goto tr12;
 		case 92: goto tr13;
@@ -870,12 +894,12 @@ case 4:
 	_out: {}
 	}
 
-#line 449 "/home/matiu/projects/json++11/src/json.rl"
+#line 473 "/home/matiu/projects/json++11/src/json.rl"
 
     // The state machine returns, so the code will only get here if it can't
     // parse the string
     handleError("Couldn't read a string");
-    return output;
+    return result;
   }
 
   /**

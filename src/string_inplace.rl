@@ -6,7 +6,7 @@
     action recordNewLine { *output++ = '\n'; }
     action recordReturn { *output++ = '\r'; }
     action recordTab { *output++ = '\t'; }
-    action getChar { *output++ = *p; }
+    action getChar { ++output; }
     action startUnicode {
         uniChar = 0;
         uniCharBytes = 0;
@@ -62,7 +62,7 @@
     }
     action gotString {
         ++p;
-        return done();
+        return result;
     }
 
     esc_b = "\\b"@recordBackspace;

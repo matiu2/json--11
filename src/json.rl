@@ -21,7 +21,7 @@ namespace json {
 
     # string machine
     machine string;
-    include string "string.rl";
+    include string "string_in_place.rl";
     main := string;
 
     # Number machine
@@ -437,20 +437,44 @@ public:
   }
 
   std::string readString() {
+    struct CountingIterator {
+        iterator real;
+        iterator start=real;
+        size_t size=0;
+        CountingIterator(iterator real) : real(real) {}
+        void operator ++(int) {
+            ++real;
+            ++size;
+        }
+        CountingIterator operator ++() {
+            CountingIterator now(*this);
+            ++*this;
+            return now;
+        }
+        char operator *() {
+            return *real;
+        }
+    };
     %%machine string;
     int startState = %%write start;
     ;
     int cs = startState; // Current state
     wchar_t uniChar = 0;
     int uniCharBytes = 0;
-    std::string output;
+    CountingIterator output(p);
+    std::string result;
+    auto done = [&]() {
+        result.reserve(output.size);
+        std::copy(output.start, output.real, std::back_inserter(result));
+        return result;
+    };
     %%{
         write exec;
     }%%
     // The state machine returns, so the code will only get here if it can't
     // parse the string
     handleError("Couldn't read a string");
-    return output;
+    return result;
   }
 
   /**
