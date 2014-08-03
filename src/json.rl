@@ -14,11 +14,11 @@
 #include "locatingIterator.hpp"
 #endif
 
+#include "parser_types.hpp"
+
 namespace json {
 
 %%{
-    # Harder types
-
     # string machine
     machine string;
     include string "string.rl";
@@ -28,91 +28,7 @@ namespace json {
     machine number;
     include "number.rl";
     main := number;
-
 }%%
-
-/// Allows lazy evaluation of number types
-class NumberInfo {
- private:
-  bool _intIsNeg;
-  unsigned long long _intPart;
-  int _expPart;
-
- public:
-  NumberInfo(bool intIsNeg, unsigned long long intPart, int expPart)
-      : _intIsNeg(intIsNeg), _intPart(intPart), _expPart(expPart) {}
-
-  template <typename NumberType>
-  NumberType value() const {
-    NumberType result = _intPart;
-    int expPart = _expPart;
-    if (expPart < 0) {
-      while (expPart++ < 0) result *= 0.1;
-      return _intIsNeg ? -result : result;
-    } else {
-      while (expPart-- > 0) result *= 10;
-      return _intIsNeg ? -result : result;
-    }
-  }
-
-  operator int() { return value<int>(); }
-  operator unsigned int() { return value<unsigned int>(); }
-  operator long() { return value<long>(); }
-  operator unsigned long() { return value<unsigned long>(); }
-  operator long long() { return value<long long>(); }
-  operator unsigned long long() { return value<unsigned long long>(); }
-  operator float() { return value<float>(); }
-  operator double() { return value<double>(); }
-  operator long double() { return value<long double>(); }
-  operator short() { return value<short>(); }
-  operator unsigned short() { return value<unsigned short>(); }
-  operator char() { return value<char>(); }
-  operator unsigned char() { return value<unsigned char>(); }
-};
-
-template <typename T = const char *> class Parser;
-
-/// Allows lazy decoding of string types
-/// @tparam T Const Iterator type
-template <typename T>
-struct StringInfo {
-    T _begin;
-    T _end;
-    T begin() const { return _begin; }
-    T end() const { return _end; }
-    operator std::string() const {
-        Parser<T> parser(_begin, _end);
-        return parser.readString();
-    }
-};
-
-
-/// tparam P the Parser specialization that we refer to
-template <typename P, typename T=typename P::iterator>
-class ParserError : public std::runtime_error {
-private:
-#ifndef NO_LOCATIONS
-  static std::string make_msg(const std::string &msg, int row, int col) {
-    std::stringstream result;
-    result << msg << " at row " << row << " col " << col;
-    // return msg + " at " + location;
-    return result.str();
-  }
-#else
-  static std::string make_msg(const std::string &msg) { return msg; }
-#endif
-
- public:
-#ifndef NO_LOCATIONS
-   ParserError(const std::string &msg, int row, int col)
-       : std::runtime_error(make_msg(msg, row, col)), row(row), col(col)  {}
-  const int row;
-  const int col;
-#else
-   ParserError(const std::string &msg)
-       : std::runtime_error(make_msg(msg)) {}
-#endif
-};
 
 /** tparam An iterator that returns chars **/
 template <typename T> class Parser {
@@ -473,14 +389,14 @@ public:
   StringInfo<iterator> readStringInfo() {
       iterator start = p;
       iterator i = p;
-      while (i != end) {
+      while (i != pe) {
           if (*i == '"')
               break;
           if (*i == '\\')
               ++i; // Skip the next letter
           ++i;     // Read the next letter
       }
-      if (i == end)
+      if (i == pe)
         handleError("Couldn't read a string");
       return {start, i};
   }

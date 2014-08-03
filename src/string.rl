@@ -1,12 +1,12 @@
 %%{
     machine string;
 
-    action recordBackspace { output += '\b'; }
-    action recordFormFeed { output += '\f'; }
-    action recordNewLine { output += '\n'; }
-    action recordReturn { output += '\r'; }
-    action recordTab { output += '\t'; }
-    action getChar { output += *p; }
+    action recordBackspace { *output++ = '\b'; }
+    action recordFormFeed { *output++ = '\f'; }
+    action recordNewLine { *output++ = '\n'; }
+    action recordReturn { *output++ = '\r'; }
+    action recordTab { *output++ = '\t'; }
+    action getChar { *output++ = *p; }
     action startUnicode {
         uniChar = 0;
         uniCharBytes = 0;
@@ -36,7 +36,7 @@
         */
         int numBytes = getNumBytes(uniChar); // number of bytes needed for utf-8 encoding
         if (numBytes == 1) {
-            output += uniChar;
+            *output++ = uniChar;
         } else {
             std::vector<char> bytes;
             for (int i=1; i<numBytes; ++i) {
@@ -57,12 +57,12 @@
             bytes.push_back(byte);
             // Output it
             for (auto i=bytes.rbegin(); i!=bytes.rend(); ++i)
-                output += *i;
+                *output++ = *i;
         }
     }
     action gotString {
         ++p;
-        return output;
+        return;
     }
 
     esc_b = "\\b"@recordBackspace;

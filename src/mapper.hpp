@@ -25,7 +25,7 @@ JSON read(Parser<T>& parser) {
       do {
         if (!parser.findNextAttribute())
           break;
-        std::string attrName = parser.readNextAttribute();
+        Parser::StringInfo attrName = parser.readNextAttribute();
         contents.insert({attrName, std::move(read(parser))});
       } while (parser.doIHaveMoreAttributes());
       return contents;
@@ -33,7 +33,7 @@ JSON read(Parser<T>& parser) {
     case Parser<T>::number:
       return parser.readNumber();
     case Parser<T>::string:
-      return JSON(parser.readString());
+      return JSON(parser.readStringInfo());
     case Parser<T>::HIT_END:
     case Parser<T>::ERROR:
     default:
