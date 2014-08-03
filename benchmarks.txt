@@ -2,6 +2,10 @@
 
  * Python: 1.2 s (python version is what we're aiming to beat)
 
+# RapidJSON
+
+ * 0.25 (rapid JSON c++ lib. We're also trying to beat this)
+
 # Full parse (currently inhibited by getmem for each string):
 
  * Debug: 6.7 s
