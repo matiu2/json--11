@@ -34,6 +34,9 @@ struct JSONTraits {
   using JMap = BasicJMap<A>;
 };
 
+template <typename A = std::allocator<char>>
+std::ostream &operator<<(std::ostream &s, const BasicJSON<A> &j);
+
 template <typename A, typename traits> struct BasicJSON {
 public:
   enum Type { null, boolean, number, text, map, list };
@@ -42,7 +45,7 @@ public:
   using JList = typename traits::JList;
   using JMap = typename traits::JMap;
 private:
-  friend std::ostream &operator<<<A>(ostream &s, const JSON &j);
+  friend std::ostream &operator<<<A>(std::ostream &s, const JSON &j);
   Type type;
   union Value {
     String as_string;
@@ -173,21 +176,37 @@ public:
                back_inserter(result));
     return result;
   }
-  operator const JMap &() const {
-    assert(type == map);
-    return value.as_map;
-  }
-  operator const JList &() const {
+  operator JList&() {
     assert(type == list);
     return value.as_list;
   }
-  operator JMap &() {
+  operator JList&&() {
+    assert(type == list);
+    JList&& result = std::move(value.as_list);
+    value.as_list.clear();
+    return result;
+  }
+  operator const JList&() const {
+    assert(type == list);
+    return value.as_list;
+  }
+  operator JMap() {
     assert(type == map);
     return value.as_map;
   }
-  operator JList &() {
-    assert(type == list);
-    return value.as_list;
+  operator JMap&() {
+    assert(type == map);
+    return value.as_map;
+  }
+  operator JMap&&() {
+    assert(type == map);
+    JMap&& result = std::move(value.as_map);
+    value.as_map.clear();
+    return result;
+  }
+  operator const JMap&() const {
+    assert(type == map);
+    return value.as_map;
   }
   explicit operator bool() const {
     // If the type is null, the bool value is false
@@ -234,11 +253,11 @@ public:
     assert(type == map);
     return value.as_map.at(i);
   }
-  JSON &operator[](const std::string &i) {
+  JSON &operator[](const String &i) {
     assert(type == map);
     return value.as_map[i];
   }
-  const JSON &operator[](const std::string &i) const {
+  const JSON &operator[](const String &i) const {
     assert(type == map);
     return value.as_map.at(i);
   }
@@ -263,7 +282,7 @@ public:
 };
 
 template <typename T, typename A = std::allocator<char>>
-std::ostream &operator<<(ostream &s, const BasicJMap<A> &j) {
+std::ostream &operator<<(std::ostream &s, const BasicJMap<A> &j) {
   s << '{';
   auto entry = j.cbegin();
   auto end = j.cend();
@@ -281,7 +300,7 @@ std::ostream &operator<<(ostream &s, const BasicJMap<A> &j) {
 }
 
 template <typename T, typename A = std::allocator<char>>
-std::ostream &operator<<(ostream &s, const BasicJList<A> &j) {
+std::ostream &operator<<(std::ostream &s, const BasicJList<A> &j) {
   s << '[';
   auto entry = j.cbegin();
   auto end = j.cend();
@@ -297,8 +316,8 @@ std::ostream &operator<<(ostream &s, const BasicJList<A> &j) {
   return s;
 }
 
-template <typename A = std::allocator<char>>
-std::ostream &operator<<(ostream &s, const BasicJSON<A> &j) {
+template <typename A>
+std::ostream &operator<<(std::ostream &s, const BasicJSON<A> &j) {
   using JSON = BasicJSON<A>;
   switch (j.type) {
   case JSON::null:

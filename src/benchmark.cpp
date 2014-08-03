@@ -23,17 +23,17 @@ int main(int, char **) {
   const char* start = inString.c_str();
   const char* end = start + inString.size();
   // Parse it and print out check the friend's name 10k times
-  const std::string expectedName("DixieSims");
+  const JSON::String expectedName("DixieSims");
   int retval = 0;
   using Parser = Parser<const char*>;
-  for (long i = 0; i < 1; ++i) {
+  for (long i = 0; i < 10000; ++i) {
     Parser p(start, end);
-    JSON data = std::move(read(p));
-    const JList &outter(data);
+    json::fast::JSON data = std::move(read(p));
+    const JList &outter = data;
     const JList &friends = outter[0]["friends"];
     for (const JSON &myFriend : friends) {
       if (myFriend["id"] == 1) {
-        if (static_cast<std::string>(myFriend["name"]) != expectedName) {
+        if (static_cast<const JSON::String&>(myFriend["name"]) != expectedName) {
           ++retval;
           break;
         }

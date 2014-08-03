@@ -35,7 +35,7 @@ JSON read(T begin, T end, bool skipOverErrors = false) {
 }
 
 template<typename T, typename A=std::allocator<char>>
-istream& operator >>(istream& i, BasicJSON<T>& j) {
+std::istream& operator >>(std::istream& i, BasicJSON<T>& j) {
   j = read<A>(i);
   return i;
 }

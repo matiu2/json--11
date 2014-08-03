@@ -22,3 +22,7 @@
 # Two pass, using explicit inline on the location iterator
 
  * Release: 1.2
+
+# Custom allocators
+
+ * RelWithDebInfo: 1.8

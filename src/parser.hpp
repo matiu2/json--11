@@ -62,13 +62,15 @@ class NumberInfo {
   operator unsigned char() { return value<unsigned char>(); }
 };
 
-/// tparam P the Parser specialization that we refer to
-template <typename P, typename T=typename P::iterator>
+/// @tparam P the Parser specialization that we refer to
+template <typename P, typename T=typename P::iterator, typename A=std::allocator<char>>
 class ParserError : public std::runtime_error {
+public:
+  using String = std::basic_string<char, std::char_traits<char>, A>;
 private:
 #ifndef NO_LOCATIONS
   static std::string make_msg(const std::string &msg, int row, int col) {
-    std::stringstream result;
+    std::basic_stringstream<char, std::char_traits<char>, A> result;
     result << msg << " at row " << row << " col " << col;
     // return msg + " at " + location;
     return result.str();
@@ -79,17 +81,17 @@ private:
 
  public:
 #ifndef NO_LOCATIONS
-   ParserError(const std::string &msg, int row, int col)
+   ParserError(const String &msg, int row, int col)
        : std::runtime_error(make_msg(msg, row, col)), row(row), col(col)  {}
   const int row;
   const int col;
 #else
-   ParserError(const std::string &msg)
-       : std::runtime_error(make_msg(msg)) {}
+   ParserError(const String &msg) : std::runtime_error(make_msg(msg.c_str())) {}
 #endif
 };
 
-/** tparam An iterator that returns chars **/
+/** @tparam T An iterator that returns chars
+    @tparam A Allocator **/
 template <typename T = const char *, typename A = std::allocator<char>> class Parser {
 public:
   enum JSONToken {
@@ -108,11 +110,12 @@ public:
   };
   using MyType = Parser<T>;
   using iterator = T;
-  using Error = ParserError<MyType>;
+  using Error = ParserError<MyType, typename MyType::iterator, A>;
   using Allocator = A;
   using String = std::basic_string<char, std::char_traits<char>, A>;
+  using StringStream = std::basic_stringstream<char, std::char_traits<char>, A>;
 #ifndef NO_LOCATIONS
-  friend class ParserError<MyType>;
+  friend Error;
 #endif
 
 private:
@@ -177,7 +180,7 @@ public:
   *
   * @param message The error message to show
   */
-  void handleError(const String &message) {
+  void handleError(const String& message) {
     if (skipOverErrors) {
       // Skip Forward until we find a new type
       while (p != pe) {
@@ -191,9 +194,9 @@ public:
           // We have to raise an error here. There's no way we can skip
           // forward anymore
 #ifndef NO_LOCATIONS
-          throw Error(std::string("Hit end: ") + std::string(message.c_str()), p.row, p.col);
+          throw Error(String("Hit end: ") + String(message), p.row, p.col);
 #else
-          throw Error(std::string("Hit end: ") + std::string(message.c_str()));
+          throw Error(String("Hit end: ") + String(message));
 #endif
         default:
           return;
@@ -359,16 +362,16 @@ public:
       return NumberInfo(intIsNeg, intPart, expPart);
     };
     
-#line 371 "/home/matiu/projects/json++11/src/json.rl"
+#line 374 "/home/matiu/projects/json++11/src/json.rl"
     int startState =
       
-#line 366 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 369 "/home/matiu/projects/json++11/src/parser.hpp"
 1
-#line 373 "/home/matiu/projects/json++11/src/json.rl"
+#line 376 "/home/matiu/projects/json++11/src/json.rl"
     ;
     int cs = startState; // Current state
     
-#line 372 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 375 "/home/matiu/projects/json++11/src/parser.hpp"
 	{
 	if ( p == pe )
 		goto _test_eof;
@@ -396,7 +399,7 @@ st2:
 	if ( ++p == pe )
 		goto _test_eof2;
 case 2:
-#line 400 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 403 "/home/matiu/projects/json++11/src/parser.hpp"
 	if ( 48 <= (*p) && (*p) <= 57 )
 		goto tr2;
 	goto st0;
@@ -415,7 +418,7 @@ st6:
 	if ( ++p == pe )
 		goto _test_eof6;
 case 6:
-#line 419 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 422 "/home/matiu/projects/json++11/src/parser.hpp"
 	switch( (*p) ) {
 		case 46: goto st3;
 		case 69: goto st4;
@@ -446,7 +449,7 @@ st7:
 	if ( ++p == pe )
 		goto _test_eof7;
 case 7:
-#line 450 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 453 "/home/matiu/projects/json++11/src/parser.hpp"
 	switch( (*p) ) {
 		case 69: goto st4;
 		case 101: goto st4;
@@ -479,7 +482,7 @@ st5:
 	if ( ++p == pe )
 		goto _test_eof5;
 case 5:
-#line 483 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 486 "/home/matiu/projects/json++11/src/parser.hpp"
 	if ( 48 <= (*p) && (*p) <= 57 )
 		goto tr5;
 	goto st0;
@@ -497,7 +500,7 @@ st8:
 	if ( ++p == pe )
 		goto _test_eof8;
 case 8:
-#line 501 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 504 "/home/matiu/projects/json++11/src/parser.hpp"
 	if ( 48 <= (*p) && (*p) <= 57 )
 		goto tr5;
 	goto st0;
@@ -525,14 +528,14 @@ case 8:
         return makeNumber();
     }
 	break;
-#line 529 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 532 "/home/matiu/projects/json++11/src/parser.hpp"
 	}
 	}
 
 	_out: {}
 	}
 
-#line 377 "/home/matiu/projects/json++11/src/json.rl"
+#line 380 "/home/matiu/projects/json++11/src/json.rl"
 
     // The state machine returns, so the code will only get here if it can't
     // parse the string
@@ -547,17 +550,17 @@ case 8:
     auto out = std::back_inserter(output);
     /// The actual parsing code
     
-#line 391 "/home/matiu/projects/json++11/src/json.rl"
+#line 394 "/home/matiu/projects/json++11/src/json.rl"
     int startState = 
-#line 553 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 556 "/home/matiu/projects/json++11/src/parser.hpp"
 1
-#line 392 "/home/matiu/projects/json++11/src/json.rl"
+#line 395 "/home/matiu/projects/json++11/src/json.rl"
     ;
     int cs = startState; // Current state
     wchar_t uniChar = 0;
     int uniCharBytes = 0;
     
-#line 561 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 564 "/home/matiu/projects/json++11/src/parser.hpp"
 	{
 	if ( p == pe )
 		goto _test_eof;
@@ -633,7 +636,7 @@ st1:
 	if ( ++p == pe )
 		goto _test_eof1;
 case 1:
-#line 637 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 640 "/home/matiu/projects/json++11/src/parser.hpp"
 	switch( (*p) ) {
 		case 34: goto tr1;
 		case 92: goto st2;
@@ -695,7 +698,7 @@ st5:
 	if ( ++p == pe )
 		goto _test_eof5;
 case 5:
-#line 699 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 702 "/home/matiu/projects/json++11/src/parser.hpp"
 	goto st0;
 st0:
 cs = 0;
@@ -744,7 +747,7 @@ st2:
 	if ( ++p == pe )
 		goto _test_eof2;
 case 2:
-#line 748 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 751 "/home/matiu/projects/json++11/src/parser.hpp"
 	switch( (*p) ) {
 		case 98: goto tr3;
 		case 102: goto tr4;
@@ -765,7 +768,7 @@ st3:
 	if ( ++p == pe )
 		goto _test_eof3;
 case 3:
-#line 769 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 772 "/home/matiu/projects/json++11/src/parser.hpp"
 	if ( (*p) < 65 ) {
 		if ( 48 <= (*p) && (*p) <= 57 )
 			goto tr9;
@@ -794,7 +797,7 @@ st4:
 	if ( ++p == pe )
 		goto _test_eof4;
 case 4:
-#line 798 "/home/matiu/projects/json++11/src/parser.hpp"
+#line 801 "/home/matiu/projects/json++11/src/parser.hpp"
 	switch( (*p) ) {
 		case 34: goto tr12;
 		case 92: goto tr13;
@@ -819,7 +822,7 @@ case 4:
 	_out: {}
 	}
 
-#line 398 "/home/matiu/projects/json++11/src/json.rl"
+#line 401 "/home/matiu/projects/json++11/src/json.rl"
 
     // The state machine returns, so the code will only get here if it can't
     // parse the string
@@ -830,7 +833,7 @@ case 4:
   /// @returns true if you got the type you wanted
   bool expect(JSONToken expected, JSONToken got) {
     if (expected != got) {
-      std::stringstream msg;
+      StringStream msg;
       if (got == HIT_END)
         msg << "Expected '" << (char)expected << "' but hit the end of input";
       else
@@ -852,7 +855,7 @@ case 4:
     case string:
       return true;
     default: {
-      std::stringstream msg;
+      StringStream msg;
       if (got == HIT_END)
         msg << "Expected any real json type but hit the end of input";
       else

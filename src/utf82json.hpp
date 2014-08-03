@@ -9,7 +9,7 @@
 #include <iostream>
 #include <iterator>
 
-using namespace std;
+namespace json {
 
 /// Takes a number, and outputs its hexadecimal representation
 template <typename T, typename OutIterator>
@@ -176,4 +176,6 @@ std::string utf82json(const std::string& utf8) {
  */
 void utf82json(const std::string& utf8, std::string& out) {
   utf82json(utf8.cbegin(), utf8.cend(), back_inserter(out));
+}
+
 }
