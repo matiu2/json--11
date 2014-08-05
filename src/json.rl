@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <memory>
 
 #ifndef NO_LOCATIONS
 #include "locatingIterator.hpp"
@@ -98,7 +99,7 @@ private:
 };
 
 /** tparam An iterator that returns chars **/
-template <typename T = const char *> class Parser {
+template <typename T = const char *, typename A=std::allocator<char>> class Parser {
 public:
   enum JSONType {
     null = 'n',
@@ -113,6 +114,7 @@ public:
   using MyType = Parser<T>;
   using iterator = T;
   using Error = ParserError<MyType>;
+  using String = std::basic_string<char, char_traits<char>, A>;
 #ifndef NO_LOCATIONS
   friend class ParserError<MyType>;
 #endif
@@ -436,21 +438,26 @@ public:
     return N();
   }
 
-  std::string readString() {
+  String readString() {
+      String output;
+      readString(output);
+      return output;
+  }
+
+  template <typename S>
+  void readString(S& output) {
     %%machine string;
     int startState = %%write start;
     ;
     int cs = startState; // Current state
     wchar_t uniChar = 0;
     int uniCharBytes = 0;
-    std::string output;
     %%{
         write exec;
     }%%
     // The state machine returns, so the code will only get here if it can't
     // parse the string
     handleError("Couldn't read a string");
-    return output;
   }
 
   /**
@@ -473,8 +480,16 @@ public:
   /**
   * @brief While reading an object .. get the next attribute name
   */
-  std::string readNextAttribute() {
-    std::string output = readString();
+  bool readNextAttribute(String& output) {
+    readString(output);
+    scanWSFor<':'>();
+  }
+
+  /**
+  * @brief While reading an object .. get the next attribute name
+  */
+  String readNextAttribute() {
+    String output = readString();
     scanWSFor<':'>();
     return output;
   }
