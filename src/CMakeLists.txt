@@ -46,3 +46,5 @@ find_file(RAPID_JSON_DOCUMENT rapidjson/document.h)
 if (RAPID_JSON_DOCUMENT)
   add_executable(rapid_json_benchmark rapid_json_benchmark.cpp)
 endif()
+
+add_executable(quick_benchmark quickBenchMark.cpp)

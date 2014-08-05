@@ -202,43 +202,6 @@ private:
   }
 
   /**
-  * If 'skipOverErrors' is false, throws a Error, otherwise just returns.
-  * Context is automatically passed to the Error object.
-  *
-  * @param message The error message to show
-  */
-  void handleError(const std::string &message) {
-    if (skipOverErrors) {
-      // Skip Forward until we find a new type
-      while (p != pe) {
-        switch (getNextType(true)) {
-        case number:
-          return;
-        case ERROR:
-          ++p;
-          continue;
-        case HIT_END:
-          // We have to raise an error here. There's no way we can skip
-          // forward anymore
-#ifndef NO_LOCATIONS
-          throw Error(std::string("Hit end: ") + message, p.row, p.col);
-#else
-          throw Error(std::string("Hit end: ") + message);
-#endif
-        default:
-          return;
-        }
-      }
-    } else {
-#ifndef NO_LOCATIONS
-      throw Error(message, p.row, p.col);
-#else
-      throw Error(message);
-#endif
-    }
-  }
-
-  /**
   * Tests a null terminated C string. If we reach the null char .. just returns.
   * If something doesn't match, it throws the Error.
   *
@@ -279,6 +242,43 @@ public:
   Parser(const Parser &original)
       : p(original.p), pe(original.pe), eof(original.eof),
         skipOverErrors(original.skipOverErrors) {}
+
+  /**
+  * If 'skipOverErrors' is false, throws a Error, otherwise just returns.
+  * Context is automatically passed to the Error object.
+  *
+  * @param message The error message to show
+  */
+  void handleError(const std::string &message) {
+    if (skipOverErrors) {
+      // Skip Forward until we find a new type
+      while (p != pe) {
+        switch (getNextType(true)) {
+        case number:
+          return;
+        case ERROR:
+          ++p;
+          continue;
+        case HIT_END:
+          // We have to raise an error here. There's no way we can skip
+          // forward anymore
+#ifndef NO_LOCATIONS
+          throw Error(std::string("Hit end: ") + message, p.row, p.col);
+#else
+          throw Error(std::string("Hit end: ") + message);
+#endif
+        default:
+          return;
+        }
+      }
+    } else {
+#ifndef NO_LOCATIONS
+      throw Error(message, p.row, p.col);
+#else
+      throw Error(message);
+#endif
+    }
+  }
 
   /**
   * Eats whitespace, then tells you the next type found in the JSON stream.
@@ -633,6 +633,22 @@ public:
     } while (doIHaveMoreAttributes());
     return attrsRead;
   }
+
+  void readObject(std::function<void(std::string, JSONType)> onElement) { 
+      do {
+        if (!findNextAttribute())
+          break;
+        std::string attrName = readNextAttribute();
+        onElement(std::move(attrName), getNextType());
+      } while (doIHaveMoreAttributes());
+  }
+
+  void readArray(std::function<void(JSONType)> onElement) {
+    do {
+      onElement(getNextType());
+    } while (doIHaveMoreArray());
+  }
+
 };
 
 } // namespace json
