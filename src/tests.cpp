@@ -15,6 +15,8 @@ go_bandit([]() {
 
   before_each([&]() { output.str(""); });
 
+  using JSON = json::JSON<std::allocator<char>>;
+
   describe("The JSON model", [&]() {
 
     it("1.1. Can be null", [&]() {
@@ -85,10 +87,10 @@ go_bandit([]() {
     });
 
     it("1.8. Reads in a list", [&]() {
-      JSON j(JList{{}, {"String"}, {4.0}});
+      JSON j(JSON::JList{{}, {"String"}, {4.0}});
       AssertThat(j.isNull(), Equals(false));
       AssertThat(j.whatIs(), Equals(JSON::list));
-      const JList &list = j;
+      const JSON::JList &list = j;
       AssertThat(list, HasLength(3));
       output << j;
       AssertThat(output.str(), Equals("[null,\"String\",4]"));
@@ -98,10 +100,10 @@ go_bandit([]() {
 
   describe("The JSON model as a map", [&]() {
 
-    JSON input(JMap{
+    JSON input(JSON::JMap{
         {"Lot 1",
-         JMap{{"make", {"hillman"}}, {"model", {"Hunter"}}, {"year", {1974}}}},
-        {"Lot 2", JMap{{"make", {"porsche"}},
+         JSON::JMap{{"make", {"hillman"}}, {"model", {"Hunter"}}, {"year", {1974}}}},
+        {"Lot 2", JSON::JMap{{"make", {"porsche"}},
                        {"model", {"Cayenne"}},
                        {"year", {1982}}}}});
 
@@ -109,7 +111,7 @@ go_bandit([]() {
       JSON j(input);
       AssertThat(j.isNull(), Equals(false));
       AssertThat(j.whatIs(), Equals(JSON::map));
-      const JMap &map = j;
+      const JSON::JMap &map = j;
       AssertThat(map.size(), Equals((size_t)2));
       output << j;
       AssertThat(
@@ -153,7 +155,7 @@ go_bandit([]() {
     });
 
     it("2.5. can export with jsonToHomogenousMap", [&]() {
-      JSON j{JMap{{"Energy (Kj)", 11}, {"Sugar", 1.1}, {"Fat", 20}, {"Potasium", 0.2}}};
+      JSON j{JSON::JMap{{"Energy (Kj)", 11}, {"Sugar", 1.1}, {"Fat", 20}, {"Potasium", 0.2}}};
       std::map<std::string, double> expected = {{"Energy (Kj)", 11}, {"Sugar", 1.1}, {"Fat", 20}, {"Potasium", 0.2}};
       std::map<std::string, double> got = jsonToHomogenousMap<double>(j);
       AssertThat(got, Equals(expected));
@@ -163,11 +165,11 @@ go_bandit([]() {
 
   describe("The model as a list", [&]() {
 
-    JSON input{JList{1, 2, 3, 4, 5}};
+    JSON input{JSON::JList{1, 2, 3, 4, 5}};
 
     it("3.1. Reads in a list", [&]() {
       std::vector<int> value;
-      JList& l(input);
+      JSON::JList& l(input);
       value.reserve(l.size());
       for (JSON& j : l)
         value.push_back((int)j);
@@ -189,7 +191,7 @@ go_bandit([]() {
     });
 
     it("3.5 can export via jsonToHomogenousList", [&]() {
-      JSON j{JList{900.99, 989.99, 2000}};
+      JSON j{JSON::JList{900.99, 989.99, 2000}};
       std::vector<double> exported = jsonToHomogenousList<double>(j);
       AssertThat(exported, Equals(std::vector<double>{900.99, 989.99, 2000}));
     });
@@ -282,7 +284,7 @@ go_bandit([]() {
       JSON j = read(R"xxx(["a", 1, 2.4, ["another", "list"], "12"])xxx");
       AssertThat(j.isNull(), Equals(false));
       AssertThat(j.whatIs(), Equals(JSON::list));
-      const JList &l = j;
+      const JSON::JList &l = j;
       auto i = l.cbegin();
       const JSON &a = *i;
       // Examine the elements
@@ -291,7 +293,7 @@ go_bandit([]() {
       AssertThat((int)*++i, Equals(1));
       AssertThat((long double)*++i, EqualsWithDelta(2.4, 0.01));
       // Examine the inner list
-      const JList &l2 = *++i;
+      const JSON::JList &l2 = *++i;
       auto i2 = l2.cbegin();
       AssertThat((const std::string &)*i2++, Equals("another"));
       AssertThat((const std::string &)*i2++, Equals("list"));
@@ -312,17 +314,17 @@ go_bandit([]() {
       JSON j = read(json);
       AssertThat(j.isNull(), Equals(false));
       AssertThat(j.whatIs(), Equals(JSON::map));
-      const JMap &data = j;
-      const JMap::mapped_type& name = data.at("Name");
+      const JSON::JMap &data = j;
+      const JSON::JMap::mapped_type& name = data.at("Name");
       // Name: Human
       AssertThat((const std::string &)name, Equals("Human"));
       // Weapons: ["Teeth", "Bony Forehead", "Hands", "Feet"]
       const auto& weapons = data.at("Weapons");
       std::vector<std::string> expectedWeapons{"Teeth", "Bony Forehead", "Hands", "Feet"};
-      const JList& actualWeapons(weapons);
+      const JSON::JList& actualWeapons(weapons);
       AssertThat(actualWeapons, EqualsContainer(expectedWeapons));
       // Traits
-      const JMap& traits = data.at("Traits");
+      const JSON::JMap& traits = data.at("Traits");
       AssertThat((int)traits.at("Strength"), Equals(4));
       AssertThat((int)traits.at("Intelligence"), Equals(2));
     });
@@ -400,7 +402,7 @@ go_bandit([]() {
       JSON j = read(json);
       AssertThat(j.isNull(), Equals(false));
       AssertThat(j.whatIs(), Equals(JSON::map));
-      AssertThat(static_cast<JMap&>(j), Equals(JMap()));
+      AssertThat(static_cast<JSON::JMap&>(j), Equals(JSON::JMap()));
       output << j;
       AssertThat(output.str(), Equals("{}"));
     });

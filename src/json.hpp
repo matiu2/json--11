@@ -10,28 +10,32 @@
 #include <istream>
 #include <iterator>
 #include <algorithm>
+#include <memory>
 
 
 namespace json {
 
-JSON read(std::istream &in, bool skipOverErrors = false) {
+template <typename A=std::allocator<char>>
+JSON<A> read(std::istream &in, bool skipOverErrors = false) {
   using Iterator = std::istream_iterator<char>;
-  Parser<Iterator> parser(Iterator(in), Iterator(), skipOverErrors);
+  Parser<Iterator, A> parser(Iterator(in), Iterator(), skipOverErrors);
   return read(parser);
 }
 
-JSON read(const std::string &in, bool skipOverErrors = false) {
-  Parser<std::string::const_iterator> parser(in.cbegin(), in.cend(), skipOverErrors);
+template <typename A=std::allocator<char>>
+JSON<A> read(const std::string &in, bool skipOverErrors = false) {
+  Parser<std::string::const_iterator, A> parser(in.cbegin(), in.cend(), skipOverErrors);
   return read(parser);
 }
 
-template<typename T>
-JSON read(T begin, T end, bool skipOverErrors = false) {
-  Parser<T> parser(begin, end, skipOverErrors);
+template<typename T, typename A=std::allocator<char>>
+JSON<A> read(T begin, T end, bool skipOverErrors = false) {
+  Parser<T, A> parser(begin, end, skipOverErrors);
   return read(parser);
 }
 
-istream& operator >>(istream& i, json::JSON& j) {
+template <typename A=std::allocator<char>>
+istream& operator >>(istream& i, json::JSON<A>& j) {
   j = read(i);
   return i;
 }
@@ -42,9 +46,10 @@ using LocStreamIterator = LocatingIterator<StreamIterator>;
 #else
 using LocStreamIterator = StreamIterator;
 #endif
-std::pair<JSON, LocStreamIterator> readWithPos(std::istream &in, bool skipOverErrors = false) {
+template <typename A=std::allocator<char>>
+std::pair<JSON<A>, LocStreamIterator> readWithPos(std::istream &in, bool skipOverErrors = false) {
   Parser<StreamIterator> parser(StreamIterator(in), StreamIterator(), skipOverErrors);
-  JSON&& result(read(parser));
+  JSON<A>&& result(read(parser));
   auto p = parser.json();
   return make_pair(result, p);
 }
@@ -54,23 +59,24 @@ using LocStringIterator = LocatingIterator<std::string::const_iterator>;
 #else
 using LocStringIterator = std::string::const_iterator;
 #endif
-std::pair<JSON, LocStringIterator> readWithPos(const std::string &in, bool skipOverErrors = false) {
+template <typename A=std::allocator<char>>
+std::pair<JSON<A>, LocStringIterator> readWithPos(const std::string &in, bool skipOverErrors = false) {
   Parser<std::string::const_iterator> parser(in.cbegin(), in.cend(), skipOverErrors);
-  JSON&& result(read(parser));
+  JSON<A>&& result(read(parser));
   auto p = parser.json();
   return make_pair(result, p);
 }
 
 #ifndef NO_LOCATIONS
-template <typename T>
-std::pair<JSON, LocatingIterator<T>> readWithPos(T begin, T end,
+template <typename T, typename A=std::allocator<char>>
+std::pair<JSON<A>, LocatingIterator<T>> readWithPos(T begin, T end,
                                                  bool skipOverErrors = false) {
 #else
-template <typename T>
-std::pair<JSON, T> readWithPos(T begin, T end, bool skipOverErrors = false) {
+template <typename T, typename A=std::allocator<char>>
+std::pair<JSON<A>, T> readWithPos(T begin, T end, bool skipOverErrors = false) {
 #endif
   Parser<T> parser(begin, end, skipOverErrors);
-  JSON &&result(read(parser));
+  JSON<A> &&result(read(parser));
   auto p = parser.json();
   return make_pair(result, p);
 }

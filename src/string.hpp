@@ -136,7 +136,7 @@ tr1:
 #line 63 "/home/matiu/projects/json++11/src/string.rl"
 	{
         ++p;
-        return output;
+        return;
     }
 	goto st5;
 tr12:
@@ -181,7 +181,7 @@ tr12:
 #line 63 "/home/matiu/projects/json++11/src/string.rl"
 	{
         ++p;
-        return output;
+        return;
     }
 	goto st5;
 st5:
