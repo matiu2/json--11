@@ -11,26 +11,25 @@
 
 namespace json {
 
-struct JSON;
-
-using JList = std::vector<JSON>;
-using JEntry = std::pair<std::string, JSON>;
-using JMap = std::map<std::string, JSON>;
-
+template <typename A=std::allocator<char>>
 struct JSON {
 public:
     enum Type {null, boolean, number, text, map, list};
+    using String = std::basic_string<char, char_traits<char>, A>;
+    using JList = std::vector<JSON>;
+    using JEntry = std::pair<String, JSON>;
+    using JMap = std::map<String, JSON>;
 private:
     friend std::ostream& operator <<(ostream& s, const JSON& j);
     Type type;
     union Value {
-        std::string as_string;
+        String as_string;
         long double as_num;
         bool as_bool;
         JMap as_map;
         JList as_list;
         Value () {}
-        Value (std::string val) { new (&as_string) std::string(val); }
+        Value (String val) { new (&as_string) String(val); }
         Value (long double val) : as_num(val) {}
         Value (bool val, int) : as_bool(val) {} // Need to pass an int to differentiate from as_num constructor
         Value (JMap val) { new (&as_map) JMap(val); }
@@ -42,7 +41,7 @@ private:
             case null: 
             case boolean: 
             case number: break;
-            case text: value.as_string.~string(); break;
+            case text: value.as_string.~String(); break;
             case map: value.as_map.~JMap(); break;
             case list: value.as_list.~JList(); break;
         }
@@ -56,7 +55,7 @@ private:
             case boolean: value.as_bool = other.value.as_bool; break;
             case number: value.as_num = other.value.as_num; break;
             case text:
-                new (&value.as_string) std::string;
+                new (&value.as_string) String;
                 value.as_string = other.value.as_string;
                 break;
             case map:
@@ -77,7 +76,7 @@ private:
             case boolean: value.as_bool = other.value.as_bool; break;
             case number: value.as_num = other.value.as_num; break;
             case text:
-                new (&value.as_string) std::string(std::move(other.value.as_string));
+                new (&value.as_string) String(std::move(other.value.as_string));
                 break;
             case map:
                 new (&value.as_map) JMap(std::move(other.value.as_map));
@@ -93,7 +92,7 @@ public:
     // To convert to a boolean you need to pass an extra int to differentiate between bools and numbers .. use JBool method to create a boolean
     JSON(bool val, int) : type(boolean), value{val, 0} {} 
     JSON(long double val) : type(number), value{val} {}
-    JSON(std::string val) : type(text), value{val} {}
+    JSON(String val) : type(text), value{val} {}
     JSON(JMap val) : type(map), value{val} {}
     JSON(JList val) : type(list), value{val} {}
     JSON(const JSON& other) : type(null) { copyFromOther(other); }
@@ -115,7 +114,7 @@ public:
         return value.as_num;
     }
     /// Return as a UTF8 encoded string
-    operator std::string() const {
+    operator String() const {
         assert(type == text);
         return value.as_string;
     }
@@ -173,19 +172,19 @@ public:
       assert(type == list);
       return value.as_list[i];
     }
-    JSON &at(const std::string &i) {
+    JSON &at(const String &i) {
       assert(type == map);
       return value.as_map.at(i);
     }
-    const JSON &at(const std::string &i) const {
+    const JSON &at(const String &i) const {
       assert(type == map);
       return value.as_map.at(i);
     }
-    JSON &operator[](const std::string &i) {
+    JSON &operator[](const String &i) {
       assert(type == map);
       return value.as_map[i];
     }
-    const JSON &operator[](const std::string &i) const {
+    const JSON &operator[](const String &i) const {
       assert(type == map);
       return value.as_map.at(i);
     }
@@ -209,7 +208,8 @@ public:
     }
 };
 
-std::ostream &operator<<(ostream &s, const JMap &j) {
+template <typename A=std::allocator<char>>
+std::ostream &operator<<(ostream &s, const typename JSON<A>::JMap &j) {
   s << '{';
   auto entry = j.cbegin();
   auto end = j.cend();
@@ -226,7 +226,8 @@ std::ostream &operator<<(ostream &s, const JMap &j) {
   return s;
 }
 
-std::ostream &operator<<(ostream &s, const JList &j) {
+template <typename A=std::allocator<char>>
+std::ostream &operator<<(ostream &s, const typename JSON<A>::JList &j) {
   s << '[';
   auto entry = j.cbegin();
   auto end = j.cend();
@@ -239,7 +240,10 @@ std::ostream &operator<<(ostream &s, const JList &j) {
   return s;
 }
 
-std::ostream& operator <<(ostream& s, const JSON& j) {
+
+template <typename A=std::allocator<char>>
+std::ostream& operator <<(ostream& s, const JSON<A>& j) {
+    using JSON=json::JSON<A>;
     switch(j.type) {
         case JSON::null: s << "null"; break;
         case JSON::boolean: s << (j.value.as_bool ? "true" : "false"); break;
@@ -257,24 +261,25 @@ std::ostream& operator <<(ostream& s, const JSON& j) {
     return s;
 }
 
-JSON JBool(bool val) {
-    return JSON(val, 1);
+template <typename A=std::allocator<char>>
+JSON<A> JBool(bool val) {
+    return JSON<A>(val, 1);
 }
 
-template <typename T>
-std::vector<T> jsonToHomogenousList(const JSON& j) {
+template <typename T, typename A=std::allocator<char>>
+std::vector<T> jsonToHomogenousList(const JSON<A>& j) {
   std::vector<T> result;
-  const JList& input = j;
+  const typename JSON<A>::JList& input = j;
   result.reserve(input.size());
-  for (const JSON& item : input)
+  for (const JSON<A>& item : input)
     result.push_back(static_cast<T>(item));
   return result;
 }
 
-template <typename T>
-std::map<std::string, T> jsonToHomogenousMap(const JSON& j) {
+template <typename T, typename A=std::allocator<char>>
+std::map<std::string, T> jsonToHomogenousMap(const JSON<A>& j) {
   std::map<std::string, T> result;
-  const JMap& input = j;
+  const typename JSON<A>::JMap& input = j;
   for (auto i = input.cbegin(); i != input.cend(); ++i)
     result.insert(make_pair(i->first, static_cast<T>(i->second)));
   return result;

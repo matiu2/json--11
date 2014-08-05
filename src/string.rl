@@ -62,7 +62,7 @@
     }
     action gotString {
         ++p;
-        return output;
+        return;
     }
 
     esc_b = "\\b"@recordBackspace;
