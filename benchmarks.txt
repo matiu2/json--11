@@ -1,28 +1,19 @@
+Comparison with other frameworks.
+
+Time to parse benchmark.json 10k times, in seconds, on my laptop with release build.
+
 # Python:
 
- * Python: 1.2 s (python version is what we're aiming to beat)
+ * 1.20
 
 # RapidJSON
 
- * 0.25 (rapid JSON c++ lib. We're also trying to beat this)
+ * 0.24
 
-# Full parse (currently inhibited by getmem for each string):
+# Quick Parser
 
- * Debug: 6.7 s
- * Release: 2.3
+ * 0.20
 
-# Full parse with 128 byte reservation for each string
+# Full parse
 
- * Release: 1.8
-
-# Two pass, to get the length for the string
-
- * Release: 1.8
-
-# Two pass, to get the length for the string .. without location tracking
-
- * Release: 1.1
-
-# Two pass, using explicit inline on the location iterator
-
- * Release: 1.2
+ * 2.35
