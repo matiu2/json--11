@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <cassert>
 
 #ifndef NO_LOCATIONS
 #include "locatingIterator.hpp"
@@ -114,7 +115,11 @@ public:
     string = '"',
     ERROR = 'x'
   };
+#ifndef NO_LOCATIONS
+  using iterator = LocatingIterator<T>;
+#else
   using iterator = T;
+#endif
   using Error = ParserError<Parser>;
 #ifndef NO_LOCATIONS
   friend class ParserError<Parser>;
@@ -122,15 +127,9 @@ public:
 
 private:
 // Ragel vars
-#ifndef NO_LOCATIONS
-  LocatingIterator<T> p;
-  LocatingIterator<T> pe;
-  LocatingIterator<T> eof;
-#else
-  T p;
-  T pe;
-  T eof;
-#endif
+  iterator p;
+  iterator pe;
+  iterator eof;
   // Our vars
   bool skipOverErrors;
 
@@ -490,7 +489,15 @@ public:
       // Read the value
       if (!expectAnyRealType(next))
         break;
+#ifndef NDEBUG
+      iterator b4 = p;
       onVal(next);
+      assert(b4 != p); // The event handler *must* consume the value (call
+                       // consumeOneValue() if you don't want the result)
+#else
+      onVal(next);
+#endif
+
       // Read the comma or the end of the array
       next = getNextToken();
       if (next == ARRAY_END)
@@ -516,7 +523,14 @@ public:
         break;
       if (!expect(string, next))
         break;
+      #ifndef NDEBUG
+      std::string attrName = readString();
+      iterator b4 = p;
+      onAttribute(std::move(attrName));
+      assert(b4 == p); // onAttribute must not consume anything
+      #else
       onAttribute(readString());
+      #endif
       // Read the ':' separator
       if (!expect(COLON, getNextToken()))
         break;
@@ -524,7 +538,13 @@ public:
       next = getNextToken();
       if (!expectAnyRealType(next))
         break;
+      #ifndef NDEBUG
+      b4 = p;
       onVal(next);
+      assert(b4 != p); // onVal must consume one value
+      #else
+      onVal(next);
+      #endif
       // Read the comma or the end of the object
       next = getNextToken();
       if (next == OBJECT_END)
