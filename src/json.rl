@@ -114,11 +114,10 @@ public:
     string = '"',
     ERROR = 'x'
   };
-  using MyType = Parser<T>;
   using iterator = T;
-  using Error = ParserError<MyType>;
+  using Error = ParserError<Parser>;
 #ifndef NO_LOCATIONS
-  friend class ParserError<MyType>;
+  friend class ParserError<Parser>;
 #endif
 
 private:
@@ -447,12 +446,12 @@ public:
       readBoolean();
       return result;
     case JSONToken::array: {
-      readArray(std::bind(this, &MyType::consumeOneValue));
+      readArray([this](JSONToken t){ consumeOneValue(t); });
       return result;
     }
     case JSONToken::object: {
       auto throwAwayAttr = [](std::string &&) {};
-      readObject(throwAwayAttr, std::bind(this, &MyType::consumeOneValue));
+      readObject(throwAwayAttr, [this](JSONToken t){ consumeOneValue(t); });
       return result;
     }
     case JSONToken::number:
@@ -464,6 +463,10 @@ public:
     case JSONToken::HIT_END:
       return result;
     case JSONToken::ERROR:
+    case JSONToken::COMMA:
+    case JSONToken::COLON:
+    case JSONToken::ARRAY_END:
+    case JSONToken::OBJECT_END:
       return result; // Code should never hit here
     };
   }

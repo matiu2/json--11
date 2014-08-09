@@ -21,6 +21,8 @@ void findFriends(Parser &p) {
       if (lastAttrName == "friends") {
         p.expect(Parser::JSONToken::array, t);
         found = true;
+      } else {
+        p.consumeOneValue(t);
       }
     };
     p.readObject(onAttribute, onVal);

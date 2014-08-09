@@ -18,18 +18,18 @@ int main(int, char**)
     Document document;
 	  if (document.Parse<0>(input.str().c_str()).HasParseError())
       return 1;
-    assert(document.isArray());
+    assert(document.IsArray());
     auto &obj = document[SizeType(0)];
-    assert(obj.isObject());
+    assert(obj.IsObject());
     const auto& friends = obj["friends"];
     assert(friends.IsArray());
     for (Value::ConstValueIterator i=friends.Begin(); i != friends.End(); ++i) {
       const auto& myFriend = *i;
       const auto &id = myFriend["id"];
-      assert(id.isInt());
+      assert(id.IsInt());
       if (id.GetInt() == 1) {
         const auto &name = myFriend["name"];
-        assert(name.isString());
+        assert(name.IsString());
         if (name.GetString() == expected) {
           ++retVal;
           break;
