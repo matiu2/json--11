@@ -1,7 +1,7 @@
 #pragma once
 #include "base.hpp"
 
-namespace JSON {
+namespace json {
 
 /// Allows lazy evaluation of number types
 class NumberInfo {
@@ -11,7 +11,7 @@ private:
   int _expPart;
 
 public:
-  NumberInfo(bool intIsNeg, unsigned long long intPart, int expPart)
+  NumberInfo(bool intIsNeg=true, unsigned long long intPart=0, int expPart=0)
       : _intIsNeg(intIsNeg), _intPart(intPart), _expPart(expPart) {}
 
   template <typename NumberType> NumberType value() const {
@@ -43,17 +43,27 @@ public:
   operator unsigned char() { return value<unsigned char>(); }
 };
 
-template <typename T, typename Traits = iterator_traits<T>,
-          typename available = enable_if_t<
-              is_base_of<forward_iterator_tag,
-                         typename Traits::iterator_category>::
-                  value // Iterator must be at least a forward iterator
-              > class NumberParser {
+template <typename T, typename Traits = iterator_traits<T>>
+class NumberParser : public BaseParser<T, Traits> {
 public:
-  enum NumberToken = {digit = 0, positive = '+', negative = '-',
-                      dot = '.', exponent = 'e', somethingElse = ' ',
-                      END = 'X'};
+  using Base = BaseParser<T, Traits>;
+  using iterator = typename Base::iterator;
+  using ErrorHandler = typename Base::ErrorHandler;
+  /// These are the tokens that we expect when parsing a number
+  enum Token {
+    digit = 0, // Any digit 0..9
+    // The next 4 tokens are literals
+    positive = '+',
+    negative = '-',
+    dot = '.',
+    exponent = 'e',
+    END = ' ', // End of the number; either p == pe .. or we hit an unexpected
+               // character (like a space for example)
+  };
 
+protected:
+  iterator& p = Base::p;
+  iterator& pe = Base::pe;
 private:
   bool intIsNeg = false;          // true if the int part is negative
   bool expIsNeg = false;          // true if the exponent part is negative
@@ -64,10 +74,15 @@ private:
                     // added to the inferred exponent part
   bool gotAtLeastOneDigit = false;
   inline NumberInfo makeNumber() {
-    long expPart = expIsNeg ? expPart1 - expPart2 : expPart1 + expPart2;
-    return {intIsNeg, intPart, expPart};
+    // parse the string
+    if (gotAtLeastOneDigit) {
+      long expPart = expIsNeg ? expPart1 - expPart2 : expPart1 + expPart2;
+      return {intIsNeg, intPart, expPart};
+    } else {
+      Base::handleError("Couldn't read a number"); // Might reach here if we find for example, a standalone + or - in the json
+    }
   }
-  inline NumberToken getNextToken() {
+  inline Token getNextToken() {
     switch (*p) {
     case '0':
     case '1':
@@ -90,91 +105,174 @@ private:
     case 'E':
       return exponent;
     default:
-      return somethingElse;
+      return END;
     }
   }
   /// Records a single integer
-  void recordInt() {
+  inline void recordInt() {
     gotAtLeastOneDigit = true;
     intPart *= 10;
     intPart += *p - '0';
     ++p;
   }
-  void recordDecimal {
+  inline void recordDecimal() {
     intPart *= 10;
     intPart += *p - '0';
     --expPart1; // the 'actual' end exponent will be way at the end
   }
-  void setExpNeg {
+  inline void setExpNeg() {
     if (*p == '-')
       expIsNeg = true;
   }
-  void recordExponent {
+  inline void recordExponent() {
     expPart2 *= 10;
     expPart2 += *p - '0';
   }
   /// Records the integer part (before the '.' and before the 'e')
   /// @returns the token that stopped us recording the integer part
-  NumberToken readIntegerPart() {
+  inline Token readIntegerPart() {
     // Check that we have some input
     if (p == pe)
-      handleError("No number found. At end of input");
+      Base::handleError("No number found. At end of input");
     // Read the first digit
-    NumberToken token = getNextToken();
+    Token token = getNextToken();
     switch (token) {
     case digit:
       recordInt();
+      break;
     case negative:
-      setNegative();
+      intIsNeg = true;
+      break;
     default:
-      handleError("Expected a digit or a '-'");
+      Base::handleError("Expected a digit or a '-'");
     };
     // Read the rest of the integer part
     while (p != pe) {
       switch (token = getNextToken()) {
-      digit:
+      case digit:
         recordInt();
-      dot:
-      exponent:
+        break;
+      case dot:
+      case exponent:
         ++p;
         return token;
-      negative:
-        handleError("Didn't expect a '-' in the middle of an integer");
-      negative:
-        handleError("Didn't expect a '+' in the middle of an integer");
+      case negative:
+        Base::handleError("Didn't expect a '-' in the middle of a number");
+      case positive:
+        Base::handleError("Didn't expect a '+' in the middle of a number");
       default:
-        return token;
+        return END;
       };
     }
     return END;
   }
 
-  public:
-    NumberParser(iterator p, iterator pe, ErrorHandler onErr)
-        : BaseParser(p, pe, onErr) {}
-    NumberInfo run() {
-      NumberToken token = readIntegerPart();
-      switch (token) {
-        case dot:
-          token = readDecimalPart();
-        case exponent:
-          token = readExponentPart();
-        case END:
-        case somethingElse:
-          return makeNumber();
-        default:
-          assert("Should never reach here");
-      }
+  inline Token readDecimalPart() {
+    while (p != pe) {
+      Token token;
+      switch (token = getNextToken()) {
+      case digit:
+        recordDecimal();
+        break;
+      case dot:
+        Base::handleError("Second '.' found in a number");
+      case exponent:
+        ++p; // The actual 'e' is not needed when reading the exponent
+        return token;
+      case negative:
+        Base::handleError("Didn't expect a '-' in the middle of a number");
+      case positive:
+        Base::handleError("Didn't expect a '+' in the middle of a number");
+      default:
+        return END;
+      };
     }
+    return END;
   }
 
-  readDigitOrNegative();
-  // parse the string
-  if (gotAtLeastOneDigit)
-    return makeNumber();
-  else
-    handleError("Couldn't read a number");
-  return N();
-}
+  inline Token readExponentPart() {
+    while (p != pe) {
+      Token token;
+      switch (token = getNextToken()) {
+      case digit:
+        recordExponent();
+      case dot:
+        Base::handleError("'.' found in a exponent");
+      case exponent:
+        Base::handleError("Second 'e' for exponent found in number");
+      case negative:
+        Base::handleError("Didn't expect a '-' in the middle of a number");
+      case positive:
+        Base::handleError("Didn't expect a '+' in the middle of a number");
+      default:
+        return END;
+      };
+    }
+    return END;
+  }
+
+  NumberInfo inline makeNumber() const {
+    long expPart = expIsNeg ? expPart1 - expPart2 : expPart1 + expPart2;
+    return NumberInfo(intIsNeg, intPart, expPart);
+  }
+
+
+public:
+  inline NumberParser(iterator p, iterator pe, ErrorHandler onErr={})
+      : Base(p, pe, onErr) {}
+  inline NumberInfo run() {
+    // The number can be in on of these formats
+    // integer
+    // integer decimal
+    // integer decimal exponent
+    // integer exponent
+
+    // Read the 1st part
+    Token token = readIntegerPart();  // First part of the number
+    // Now we should see a decimal or an exponent part
+    bool haveExponent = false;
+    switch (token) {
+    case dot:
+      token = readDecimalPart();            // 2nd part of the number
+      break;
+    case exponent:
+      token = readExponentPart(); 
+      haveExponent = true;
+      break;
+    case END:
+      return makeNumber();
+    default:
+      assert("Should never reach here");
+      Base::handleError("Unexpected token in number");
+    };
+
+    if (haveExponent) {
+      switch (token) {
+      case END:
+        return makeNumber();
+      default:
+        assert("Should never get here. All error conditions should have been "
+               "handled above");
+        Base::handleError("Didn't expect more number tokens after the exponent");
+      };
+    } else {
+      switch (token) {
+      case exponent:
+        token = readExponentPart();
+        break;
+      case END:
+        return makeNumber();
+      default:
+        assert("Should never get here. All error conditions should have been "
+               "handled above");
+        Base::handleError("Unexpected token in number");
+      };
+    }
+
+    assert("Should never get here"); // We should always return a number above
+    return {};
+  }
 };
+
 }
+
