@@ -22,11 +22,10 @@ struct string_reference {
   iterator begin;
   iterator end;
 
-  // Much less efficient size function, but still works
-  typename Traits::difference_type size() const {
-    if (is_random_access_iterator<T>) {
+  size_t size() const {
+    if (is_random_access_iterator<T>())
       return end - begin;
-    } else {
+    else {
       iterator i = begin;
       typename Traits::difference_type result = 0;
       while (i != end) {
@@ -51,13 +50,13 @@ struct string_reference {
   // Compare with pretty much anything with a begin(), end()
   template <typename Other>
   bool operator ==(const Other& other) const {
-    return std::mismatch(begin, end, other.begin(), other.end()).first == end;
+    return (other.size() == size()) && std::mismatch(begin, end, other.begin(), other.end()).first == end;
   }
 
-  // Compare with pretty much anything with a begin(), end()
+  // Compare with pretty much anything with a begin(), end() and size()
   template <typename Other>
   bool operator !=(const Other& other) const {
-    return std::mismatch(begin, end, other.begin(), other.end()).first != end;
+    return (other.size() != size()) || std::mismatch(begin, end, other.begin(), other.end()).first != end;
   }
 
   // For conversion to std::basic_string<X>

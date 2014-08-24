@@ -19,28 +19,28 @@ constexpr bool is_copy_assignable() {
   return std::is_copy_assignable<T>::value;
 }
 
-/// Returns true if Traits is a forward iterator (can move forward)
-template <typename Traits>
+/// Returns true if T is a forward iterator (can move forward)
+template <typename T, typename Traits=std::iterator_traits<T>>
 constexpr bool is_forward_iterator() {
   return std::is_base_of<std::forward_iterator_tag, typename Traits::iterator_category>::value;
 }
 
 /// Returns true if Traits is an input iterator (can give us stuff to read )
-template <typename Traits>
+template <typename T, typename Traits=std::iterator_traits<T>>
 constexpr bool is_input_iterator() {
   return std::is_base_of<std::input_iterator_tag, typename Traits::iterator_category>::value;
+}
+
+/// Returns true if Traits is a random access iterator (can give us stuff to read )
+template <typename T, typename Traits=std::iterator_traits<T>>
+constexpr bool is_random_access_iterator() {
+  return is_base_of<std::random_access_iterator_tag, typename Traits::iterator_category>();
 }
 
 /// Returns true if T and Y are the same type
 template <typename T, typename Y>
 constexpr bool is_same() {
   return std::is_same<T, Y>::value;
-}
-
-/// Returns true if Traits is a random access iterator (can give us stuff to read )
-template <typename Traits>
-constexpr bool is_random_access_iterator() {
-  return is_base_of<std::random_access_iterator_tag, typename Traits::iterator_category>();
 }
 
 /// This whole namespace is dedicated to checking if a type has a .row and .col int attributes at compile time
