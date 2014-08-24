@@ -19,6 +19,13 @@ go_bandit([]() {
       AssertThat(output.begin, Equals(output.end));
     });
 
+    it("1.2. Can be a single char", [&]() {
+      std::string input = R"(x")";
+      std::string expected = R"(x")";
+      auto output = json::parseString(input.begin(), input.end());
+      AssertThat(expected, Is().EqualTo(output)); // Needs to be this way around to use the correct snowhouse template
+    });
+
   });
 });
 

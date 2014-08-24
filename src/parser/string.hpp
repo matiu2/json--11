@@ -12,16 +12,17 @@ namespace json {
 /// When we come across a block of normal chars, return the char just past the
 /// end of it
 template <typename Iterator>
-inline void findEndOfUnchangedCharBlock(Iterator p, Iterator pe) {
+inline Iterator findEndOfUnchangedCharBlock(Iterator p, Iterator pe) {
   while (p != pe) {
     switch (*p) {
     case '\\':
     case '"':
-      return;
+      return p;
     default:
       ++p;
     };
   }
+  return p;
 }
 
 /// Most basic string parser. Calls back functions for each token/block that it
@@ -103,7 +104,7 @@ parseString(Iterator p, Iterator pe,
     // continue on to handle the chain
     default: {
       unchangedCharsStart = p;
-      findEndOfUnchangedCharBlock(p, pe);
+      p = findEndOfUnchangedCharBlock(p, pe);
       recordUnchangedChars(unchangedCharsStart, p);
     }
     }
@@ -122,7 +123,7 @@ inline enable_if<is_copy_assignable<remove_pointer<Iterator>>(), string_referenc
     if (!hadChangedChars) {
       // If we haven't had any changed chars, just increment our output position
       if (is_random_access_iterator<Iterator>())
-        result.end += begin - end;
+        result.end += end - begin;
       else
         while (begin++ != end)
           ++result.end;

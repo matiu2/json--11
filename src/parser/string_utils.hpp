@@ -44,8 +44,20 @@ struct string_reference {
 
   // Compare with pretty much anything with a begin(), end()
   template <typename Other>
-  bool operator <(const Other& other) {
+  bool operator <(const Other& other) const {
     return std::lexicographical_compare(begin, end, other.begin(), other.end());
+  }
+
+  // Compare with pretty much anything with a begin(), end()
+  template <typename Other>
+  bool operator ==(const Other& other) const {
+    return std::mismatch(begin, end, other.begin(), other.end()).first == end;
+  }
+
+  // Compare with pretty much anything with a begin(), end()
+  template <typename Other>
+  bool operator !=(const Other& other) const {
+    return std::mismatch(begin, end, other.begin(), other.end()).first != end;
   }
 
   // For conversion to std::basic_string<X>
