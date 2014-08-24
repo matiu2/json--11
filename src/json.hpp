@@ -14,20 +14,20 @@
 
 namespace json {
 
-JSON read(std::istream &in, bool skipOverErrors = false) {
+JSON read(std::istream &in) {
   using Iterator = std::istream_iterator<char>;
-  Parser<Iterator> parser(Iterator(in), Iterator(), skipOverErrors);
+  OutterParser<Iterator> parser{Iterator(in), Iterator()};
   return read(parser);
 }
 
-JSON read(const std::string &in, bool skipOverErrors = false) {
-  Parser<std::string::const_iterator> parser(in.cbegin(), in.cend(), skipOverErrors);
+JSON read(const std::string &in) {
+  OutterParser<std::string::const_iterator> parser(in.cbegin(), in.cend());
   return read(parser);
 }
 
 template<typename T>
-JSON read(T begin, T end, bool skipOverErrors = false) {
-  Parser<T> parser(begin, end, skipOverErrors);
+JSON read(T begin, T end) {
+  OutterParser<T> parser(begin, end);
   return read(parser);
 }
 
@@ -42,8 +42,8 @@ using LocStreamIterator = LocatingIterator<StreamIterator>;
 #else
 using LocStreamIterator = StreamIterator;
 #endif
-std::pair<JSON, LocStreamIterator> readWithPos(std::istream &in, bool skipOverErrors = false) {
-  Parser<StreamIterator> parser(StreamIterator(in), StreamIterator(), skipOverErrors);
+std::pair<JSON, LocStreamIterator> readWithPos(std::istream &in) {
+  OutterParser<StreamIterator> parser{StreamIterator(in), StreamIterator()};
   JSON&& result(read(parser));
   auto p = parser.json();
   return make_pair(result, p);
@@ -54,8 +54,8 @@ using LocStringIterator = LocatingIterator<std::string::const_iterator>;
 #else
 using LocStringIterator = std::string::const_iterator;
 #endif
-std::pair<JSON, LocStringIterator> readWithPos(const std::string &in, bool skipOverErrors = false) {
-  Parser<std::string::const_iterator> parser(in.cbegin(), in.cend(), skipOverErrors);
+std::pair<JSON, LocStringIterator> readWithPos(const std::string &in) {
+  OutterParser<std::string::const_iterator> parser(in.cbegin(), in.cend());
   JSON&& result(read(parser));
   auto p = parser.json();
   return make_pair(result, p);
@@ -63,13 +63,12 @@ std::pair<JSON, LocStringIterator> readWithPos(const std::string &in, bool skipO
 
 #ifndef NO_LOCATIONS
 template <typename T>
-std::pair<JSON, LocatingIterator<T>> readWithPos(T begin, T end,
-                                                 bool skipOverErrors = false) {
+std::pair<JSON, LocatingIterator<T>> readWithPos(T begin, T end) {
 #else
 template <typename T>
-std::pair<JSON, T> readWithPos(T begin, T end, bool skipOverErrors = false) {
+std::pair<JSON, T> readWithPos(T begin, T end) {
 #endif
-  Parser<T> parser(begin, end, skipOverErrors);
+  OutterParser<T> parser(begin, end);
   JSON &&result(read(parser));
   auto p = parser.json();
   return make_pair(result, p);

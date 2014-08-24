@@ -6,7 +6,7 @@ namespace json {
 /**
  * Returns the number of bytes needed to encode a unicode character in utf8
  */
-int getNumBytes(wchar_t c) {
+inline int getNumBytes(wchar_t c) {
   int result = 1;
   wchar_t checker = 0x7f;
   if (c <= checker)
@@ -25,7 +25,8 @@ int getNumBytes(wchar_t c) {
 }
 
 /// After collecting all the unicode integers, we generate the final output char
-template <typename T> void endUnicode(T &p) {
+template <typename Iterator>
+inline Iterator utf8encode(wchar_t u, Iterator p) {
   /*
      UCS-4 range (hex.)           UTF-8 octet sequence (binary)
      0000 0000-0000 007F   0xxxxxxx
@@ -37,30 +38,27 @@ template <typename T> void endUnicode(T &p) {
      0400 0000-7FFF FFFF   1111110x 10xxxxxx ... 10xxxxxx
   */
   int numBytes =
-      getNumBytes(uniChar); // number of bytes needed for utf-8 encoding
+      getNumBytes(u); // number of bytes needed for utf-8 encoding
   if (numBytes == 1) {
-    output += uniChar;
+    *(p++) = static_cast<char>(u);
   } else {
-    std::vector<char> bytes;
     for (int i = 1; i < numBytes; ++i) {
-      char byte = uniChar & 0x3f; // Only encoding 6 bits right now
+      char byte = u & 0x3f; // Only encoding 6 bits right now
       byte |= 0x80;               // Make sure the high bit is set
-      bytes.push_back(byte);
-      uniChar >>= 6;
+      *(p++) = byte;
+      u >>= 6;
     }
     // The last byte is special
-    char mask = 0x3f >> (numBytes - 2);
-    char byte = uniChar & mask;
+    const char mask = 0x3f >> (numBytes - 2);
+    char byte = u & mask;
     char top = 0xc0;
     for (int i = 2; i < numBytes; ++i) {
       top >>= 1;
       top |= 0x80;
     }
     byte |= top;
-    bytes.push_back(byte);
-    // Output it
-    for (auto i = bytes.rbegin(); i != bytes.rend(); ++i)
-      output += *i;
+    *(p++) = byte;
   }
+  return p;
 }
 }

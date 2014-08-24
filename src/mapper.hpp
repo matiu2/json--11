@@ -1,4 +1,6 @@
 /** Maps the parsed values into json_class(s) **/
+#pragma once
+
 #include "parser.hpp"
 #include "json_class.hpp"
 
@@ -6,8 +8,8 @@ namespace json {
 
 /// Recursive function that reads from a json string and returns a JSON object
 template <typename T>
-JSON read(Parser<T> &parser, typename Parser<T>::JSONToken alreadyGotType = Parser<T>::JSONToken::HIT_END) {
-  using Parser = Parser<T>;
+JSON read(OutterParser<T> &parser, typename OutterParser<T>::JSONToken alreadyGotType = OutterParser<T>::JSONToken::HIT_END) {
+  using Parser = OutterParser<T>;
   using JSONToken = typename Parser::JSONToken;
   switch (alreadyGotType == JSONToken::HIT_END ? parser.getNextToken() : alreadyGotType) {
   case Parser::null:

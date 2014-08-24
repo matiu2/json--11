@@ -1,29 +1,54 @@
 /// Parses a json string
 #pragma once
 
+#include <iterator>
+
+#include "utils.hpp"
+#include "string_utils.hpp"
+#include "utf8encode.hpp"
+
 namespace json {
 
-/// Most basic string parser. Calls back functions for each token/block that it finds.
-template <typename Iterator, typename Traits = iterator_traits<Iterator>>
-void ParseString(Iterator &p, const Iterator &pe,
-                 std::function<void(char)> recordUnchangedChar,
-                 std::function<void(char)> recordChar,
-                 std::function<void(w_char_t)> recordUnicode) {
+/// When we come across a block of normal chars, return the char just past the
+/// end of it
+template <typename Iterator>
+inline void findEndOfUnchangedCharBlock(Iterator p, Iterator pe) {
+  while (p != pe) {
+    switch (*p) {
+    case '\\':
+    case '"':
+      return;
+    default:
+      ++p;
+    };
+  }
+}
+
+/// Most basic string parser. Calls back functions for each token/block that it
+/// finds.
+template <typename Iterator>
+inline void
+parseString(Iterator p, Iterator pe,
+            std::function<void(Iterator, Iterator)>
+                recordUnchangedChars, /// Takes the begin and end iterators
+                                      /// of a block of unchanged chars
+            std::function<void(char)> recordChar,
+            std::function<void(wchar_t)> recordUnicode) {
   /// Handle the 4 digits of a unicode char
-  auto handleUnicode = [&]() {
-    wchar_t uniChar = 0;
+  auto readUnicode = [&]() {
+    wchar_t u = 0;
     int uniCharNibbles = 0;
     while (p != pe) {
       if (uniCharNibbles == sizeof(wchar_t))
         throw std::logic_error("Max unicode char is 32 bits");
-      uniChar <<= 4;
+      u <<= 4;
       char ch = *p++;
       if ((ch >= 'a') && (ch <= 'f'))
-        uniChar += ch - 'a' + 0x0A;
+        u += ch - 'a' + 0x0A;
       else if ((ch >= 'A') && (ch <= 'F'))
-        uniChar += ch - 'A' + 0x0A;
+        u += ch - 'A' + 0x0A;
       else if ((ch >= '0') && (ch <= '9'))
-        uniChar += ch - '0';
+        u += ch - '0';
       else
         break;
       ++uniCharNibbles;
@@ -31,12 +56,13 @@ void ParseString(Iterator &p, const Iterator &pe,
     // We didn't get any unicode digits
     if (uniCharNibbles == 0) {
       throw std::logic_error("\\u with no hex after it");
-    }
-    if (uniCharNibbles == 0) {
-      throw std::logic_error("\\u with no hex after it");
+    } else {
+      return u;
     }
   };
   /// Handle the escaped character after the backslash
+  /// @return true if we handled it; false if it turned out to be just an normal
+  /// char (eg '\\')
   auto handleEscape = [&]() {
     switch (*++p) {
     case 'b':
@@ -58,126 +84,68 @@ void ParseString(Iterator &p, const Iterator &pe,
       recordUnicode(readUnicode());
       break;
     default:
-      recordUnchangedChar(*p);
-      break;
+      return false;
     };
+    return true;
   };
+
   // Main outter string parsing loop
+  Iterator unchangedCharsStart = p;
   while (p != pe) {
     switch (*p) {
-      case '\\':
-        handleEscape();
+    case '"':
+      return;
+    case '\\':
+      if (handleEscape())
         break;
-      case '"':
-        return;
-      default:
-        recordChar(*p);
+    // If the escaped char was just a normal char, it will be the start of a
+    // chain of normal chars, so don't break out of the switch statement here;
+    // continue on to handle the chain
+    default: {
+      unchangedCharsStart = p;
+      findEndOfUnchangedCharBlock(p, pe);
+      recordUnchangedChars(unchangedCharsStart, p);
+    }
     }
   }
 }
 
-template <typename T, typename Traits = iterator_traits<T>>
-class StringParser : public BaseParser<T, Traits> {
-public:
-  using Base = BaseParser<T, Traits>;
-  using iterator = typename Base::iterator;
-  using ErrorHandler = typename Base::ErrorHandler;
-  /// These are the tokens that we expect when parsing a number
-  enum Token {
-    escape = '\\', // literal
-    END = '"',     // either '"' or p == pe
-    normal = 'a'   // Anything else
-  };
-  // The token when parsing an \escape sequence
-  enum EscapeToken {
-    backspace = 'b',
-    formfeed = 'f',
-    newline = 'n',
-    carriage_return = 'r',
-    tab = 't',
-    unicode = 'u',
-    literal = 'x', // Anything else
-    END = '"'
-  };
-  enum UnicodeToken {
-    digit = '0',       // 0..9 or a..z
-    END_OF_TOKEN = '"' // Anything else
-  };
+/// The most efficient string parser. Overwrites the input. Requires an assignable value_type
+/// Returns the end of the re-written string
+template <typename Iterator>
+inline enable_if<is_copy_assignable<remove_pointer<Iterator>>(), string_reference<Iterator>> parseString(Iterator p, Iterator pe) {
+  string_reference<Iterator> result{p, p};
+  bool hadChangedChars = false;
 
-protected:
-  inline Token getOutterToken() const {
-    switch (*p) {
-    case '\\':
-      ++p;
-      return escape;
-    case '"':
-      return END;
-    default:
-      return normal;
+  // Just increments the output string's length
+  auto recordUnchangedChars = [&](Iterator begin, Iterator end) {
+    if (!hadChangedChars) {
+      // If we haven't had any changed chars, just increment our output position
+      if (is_random_access_iterator<Iterator>())
+        result.end += begin - end;
+      else
+        while (begin++ != end)
+          ++result.end;
+    } else {
+      // Overwrite the output. All JSON converstions are shorter than the raw json.
+      // So the output will easily be contained within the original json string's size
+      result.end = std::copy(begin, end, result.end);
     }
-    return END;
-  }
-  inline getEscapeToken() const {
-    switch (*p) {
-      switch
-        'b' : return backspace;
-      switch
-        'f' : return formfeed;
-      switch
-        'n' : return newline;
-      switch
-        'r' : return carriage_return;
-      switch
-        't' : return tab;
-      switch
-        'u' : return unicode;
-      switch
-        'u' : return unicode;
-    default:
-      return literal;
-    };
-  }
-  inline void readOutter() {
-    switch (*p) {
-    case '\\':
-      state = escape;
-      ++p;
-    case '"':
-      throw Done();
-    default:
-      recordChar(*p);
-    };
-  }
-public:
-  inline StringParser(iterator p, iterator pe, ErrorHandler onErr={})
-      : Base(p, pe, onErr) {}
-  inline void run(std::string& output) {
-    enum { outter, escape, unicode } state = outter;
-    while (p != pe) {
-      switch (state) {
-        case outter:
-        case escape {
-          switch (*p) {
-            backspace = 'b',
-            formfeed = 'f',
-            newline = 'n',
-            carriage_return = 'r',
-            tab = 't',
-            unicode = 'u',
-            default;
+  };
 
+  auto recordChar = [&](char c) {
+    *(result.end++) = c;
+  };
+  
+  auto recordUnicode = [&](wchar_t u) {
+    // UTF-8 encode the char
+    result.end = utf8encode(u, result.end);
+  };
 
-          };
-        }
-      }
-      switch (t = getNextToken()) {
+  parseString<Iterator>(p, pe, recordUnchangedChars, recordChar, recordUnicode);
 
-      }
-    }
+  return result;
+}
 
-  }
-
-
-};
 
 }

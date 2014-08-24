@@ -26,14 +26,6 @@ public:
     string = '"',
     ERROR = 'x'
   };
-  enum StringToken {
-    ESCAPE='\\',
-    END='"'
-  };
-  enum StringEscapeToken {
-    UNICODE='u',
-    NUMBER='0'
-  };
 protected:
   iterator& p = Base::p;
   iterator& pe = Base::pe;
