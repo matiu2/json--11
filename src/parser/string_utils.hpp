@@ -70,4 +70,12 @@ struct string_reference {
   }
 };
 
+template <typename T>
+std::ostream& operator <<(std::ostream& out, const string_reference<T>& str) {
+  auto p = str.begin;
+  while (p != str.end)
+    out.put(*(p++));
+  return out;
+}
+
 }

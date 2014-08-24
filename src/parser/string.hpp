@@ -87,6 +87,7 @@ parseString(Iterator p, Iterator pe,
     default:
       return false;
     };
+    ++p; // Moving on
     return true;
   };
 

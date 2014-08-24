@@ -7,14 +7,12 @@
 using namespace bandit;
 using namespace json;
 
-namespace std {
-
 // Just for snowhouse 'Equals' to work
+namespace std {
 template <typename T>
 bool operator ==(const std::string& a, const json::string_reference<T>& b) {
   return b == a;
 }
-
 }
 
 go_bandit([]() {
@@ -41,8 +39,17 @@ go_bandit([]() {
       std::string expected = "abcdefg";
       std::string expected2 = "(1241142";
       auto output = json::parseString(input.begin(), input.end());
-      AssertThat(output, Is().EqualTo(expected));
+      AssertThat(output, Equals(expected));
+      AssertThat(output, Is().Not().EqualTo(expected2));
     });
+
+    it("1.4. Can parse all escape characters", [&]() {
+      std::string input = R"(\b\f\n\r\t")";
+      std::string expected = "\b\f\n\r\t";
+      auto output = json::parseString(input.begin(), input.end());
+      AssertThat(output, Equals(expected));
+    });
+
   });
 });
 
