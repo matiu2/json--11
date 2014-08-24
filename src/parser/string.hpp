@@ -3,122 +3,71 @@
 
 namespace json {
 
-/// Records the location of a string inside the json flow
-template <typename T>
-void getUnicode(T& p) {
-  if (uniCharBytes++ == 4)
-    throw std::logic_error("Max unicode char is 32 bits");
-  uniChar <<= 4;
-  char ch = *p;
-  if (ch >= 'a')
-    uniChar += ch - 'a' + 0x0A;
-  else if (ch >= 'A')
-    uniChar += ch - 'A' + 0x0A;
-  else
-    uniChar += ch - '0';
-}
-
-template <typename T>
-void endUnicode(T& p) {
-  /*
-     UCS-4 range (hex.)           UTF-8 octet sequence (binary)
-     0000 0000-0000 007F   0xxxxxxx
-     0000 0080-0000 07FF   110xxxxx 10xxxxxx
-     0000 0800-0000 FFFF   1110xxxx 10xxxxxx 10xxxxxx
-
-     0001 0000-001F FFFF   11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-     0020 0000-03FF FFFF   111110xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
-     0400 0000-7FFF FFFF   1111110x 10xxxxxx ... 10xxxxxx
-  */
-  int numBytes =
-      getNumBytes(uniChar); // number of bytes needed for utf-8 encoding
-  if (numBytes == 1) {
-    output += uniChar;
-  } else {
-    std::vector<char> bytes;
-    for (int i = 1; i < numBytes; ++i) {
-      char byte = uniChar & 0x3f; // Only encoding 6 bits right now
-      byte |= 0x80;               // Make sure the high bit is set
-      bytes.push_back(byte);
-      uniChar >>= 6;
-    }
-    // The last byte is special
-    char mask = 0x3f >> (numBytes - 2);
-    char byte = uniChar & mask;
-    char top = 0xc0;
-    for (int i = 2; i < numBytes; ++i) {
-      top >>= 1;
-      top |= 0x80;
-    }
-    byte |= top;
-    bytes.push_back(byte);
-    // Output it
-    for (auto i = bytes.rbegin(); i != bytes.rend(); ++i)
-      output += *i;
-  }
-}
-
-/// Returns true if Traits is an random access iterator (can give us stuff to read )
-template <typename Traits>
-constexpr bool is_random_access_iterator() {
-  return std::is_base_of<std::random_access_iterator_tag, typename Traits::iterator_category>::value;
-}
-
-
-/// Records the location of a string inside the json flow
-template <typename T, typename Traits = iterator_traits<T>>
-struct string {
-  using iterator = T;
-  using iterator_traits = Traits;
-
-  static_assert(is_forward_iterator<iterator_traits>(), "T must be a forward iterator");
-  static_assert(is_input_iterator<iterator_traits>(), "T must be a forward iterator");
-  static_assert(is_copy_assignable<iterator>(), "T must support copying by assignment");
-  static_assert(is_same<iterator_traits::value_type, char>, "We only work on char input");
-
-  iterator begin;
-  iterator end;
-
-  // Most efficient size function
-  enable_if<is_random_access_iterator<T>(), iterator_traits::difference_type> size() const {
-    return end - begin;
-  }
-
-  // Much less efficient size function
-  enable_if<!is_random_access_iterator<T>(), size_t> size() const {
-    iterator i = begin;
-    size_t result = 0;
-    while (i != pe) {
-      ++i;
-      ++result;
-    }
-    return result;
-  }
-
-};
-
-template <typename Iterator, typename Out, typename Traits = iterator_traits<Iterator>>
-void ParseString(Iterator p, Iterator pe, Out& o, std::function<void(char)> recordChar, std::function<void(w_char)> recordUnicode) {
+/// Most basic string parser. Calls back functions for each token/block that it finds.
+template <typename Iterator, typename Traits = iterator_traits<Iterator>>
+void ParseString(Iterator &p, const Iterator &pe,
+                 std::function<void(char)> recordUnchangedChar,
+                 std::function<void(char)> recordChar,
+                 std::function<void(w_char_t)> recordUnicode) {
+  /// Handle the 4 digits of a unicode char
   auto handleUnicode = [&]() {
-
+    wchar_t uniChar = 0;
+    int uniCharNibbles = 0;
+    while (p != pe) {
+      if (uniCharNibbles == sizeof(wchar_t))
+        throw std::logic_error("Max unicode char is 32 bits");
+      uniChar <<= 4;
+      char ch = *p++;
+      if ((ch >= 'a') && (ch <= 'f'))
+        uniChar += ch - 'a' + 0x0A;
+      else if ((ch >= 'A') && (ch <= 'F'))
+        uniChar += ch - 'A' + 0x0A;
+      else if ((ch >= '0') && (ch <= '9'))
+        uniChar += ch - '0';
+      else
+        break;
+      ++uniCharNibbles;
+    }
+    // We didn't get any unicode digits
+    if (uniCharNibbles == 0) {
+      throw std::logic_error("\\u with no hex after it");
+    }
+    if (uniCharNibbles == 0) {
+      throw std::logic_error("\\u with no hex after it");
+    }
   };
+  /// Handle the escaped character after the backslash
   auto handleEscape = [&]() {
     switch (*++p) {
-      case 'b': recordChar('\b'); break;
-      case 'f': recordChar('\f'); break;
-      case 'n': recordChar('\n'); break;
-      case 'r': recordChar('\r'); break;
-      case 't': recordChar('\t'); break;
-      case 'u': handleUnicode(); break;
-      default:
-        recordChar(*p);
-        break;
+    case 'b':
+      recordChar('\b');
+      break;
+    case 'f':
+      recordChar('\f');
+      break;
+    case 'n':
+      recordChar('\n');
+      break;
+    case 'r':
+      recordChar('\r');
+      break;
+    case 't':
+      recordChar('\t');
+      break;
+    case 'u':
+      recordUnicode(readUnicode());
+      break;
+    default:
+      recordUnchangedChar(*p);
+      break;
     };
-  }
+  };
+  // Main outter string parsing loop
   while (p != pe) {
     switch (*p) {
       case '\\':
-       
+        handleEscape();
+        break;
       case '"':
         return;
       default:
