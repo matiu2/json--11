@@ -96,7 +96,7 @@ wchar_t handleMultiByteChar(Iterator& in, const Iterator& end) {
 
 /// Converts a UTF8 into JSON string
 template <typename Iterator, typename OutIterator>
-void utf82json(Iterator in, Iterator end, OutIterator out) {
+Iterator utf82json(Iterator in, Iterator end, OutIterator out) {
   while (in != end) {
     unsigned char c = *in;
     // Handle UTF8 continuations first
@@ -146,6 +146,7 @@ void utf82json(Iterator in, Iterator end, OutIterator out) {
     }
     ++in;  // Get the next char
   }
+  return in;
 }
 
 template <typename Iterator, typename OutIterator>

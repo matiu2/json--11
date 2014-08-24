@@ -40,18 +40,24 @@ parseString(Iterator p, Iterator pe,
     wchar_t u = 0;
     int uniCharNibbles = 0;
     while (p != pe) {
-      if (uniCharNibbles == sizeof(wchar_t))
-        throw std::logic_error("Max unicode char is 32 bits");
-      u <<= 4;
-      char ch = *p++;
-      if ((ch >= 'a') && (ch <= 'f'))
-        u += ch - 'a' + 0x0A;
-      else if ((ch >= 'A') && (ch <= 'F'))
-        u += ch - 'A' + 0x0A;
-      else if ((ch >= '0') && (ch <= '9'))
+      if (uniCharNibbles == sizeof(wchar_t)*2) {
+        std::stringstream msg;
+        msg << "Max unicode char is " << sizeof(wchar_t) << "  bytes";
+        throw std::logic_error(msg.str());
+      }
+      char ch = *p;
+      if ((ch >= '0') && (ch <= '9')) {
+        u <<= 4;
         u += ch - '0';
-      else
+      } else if ((ch >= 'a') && (ch <= 'f')) {
+        u <<= 4;
+        u += ch - 'a' + 0x0A;
+      } else if ((ch >= 'A') && (ch <= 'F')) {
+        u <<= 4;
+        u += ch - 'A' + 0x0A;
+      } else
         break;
+      ++p;
       ++uniCharNibbles;
     }
     // We didn't get any unicode digits
@@ -68,26 +74,31 @@ parseString(Iterator p, Iterator pe,
     switch (*++p) {
     case 'b':
       recordChar('\b');
+      ++p;
       break;
     case 'f':
       recordChar('\f');
+      ++p;
       break;
     case 'n':
       recordChar('\n');
+      ++p;
       break;
     case 'r':
       recordChar('\r');
+      ++p;
       break;
     case 't':
       recordChar('\t');
+      ++p;
       break;
     case 'u':
+      ++p; // Skip over the 'u'
       recordUnicode(readUnicode());
       break;
     default:
       return false;
     };
-    ++p; // Moving on
     return true;
   };
 

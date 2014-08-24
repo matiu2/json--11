@@ -24,6 +24,24 @@ inline int getNumBytes(wchar_t c) {
   return result;
 }
 
+struct small_stack {
+  char bytes[sizeof(wchar_t)];
+  size_t index = 0;
+  inline void push(char ch) {
+    bytes[index++] = ch;
+  }
+  inline char pop() {
+  return bytes[--index];
+  }
+  /// Reads all the stack into p
+  template <typename Iterator>
+  inline Iterator read_all(Iterator p) {
+    while (index)
+      *(p++) = pop();
+    return p;
+  }
+};
+
 /// After collecting all the unicode integers, we generate the final output char
 template <typename Iterator>
 inline Iterator utf8encode(wchar_t u, Iterator p) {
@@ -41,11 +59,14 @@ inline Iterator utf8encode(wchar_t u, Iterator p) {
       getNumBytes(u); // number of bytes needed for utf-8 encoding
   if (numBytes == 1) {
     *(p++) = static_cast<char>(u);
+    return p;
   } else {
+    // This is a small stack of bytes
+    small_stack bytes;
     for (int i = 1; i < numBytes; ++i) {
       char byte = u & 0x3f; // Only encoding 6 bits right now
       byte |= 0x80;               // Make sure the high bit is set
-      *(p++) = byte;
+      bytes.push(byte);
       u >>= 6;
     }
     // The last byte is special
@@ -57,8 +78,9 @@ inline Iterator utf8encode(wchar_t u, Iterator p) {
       top |= 0x80;
     }
     byte |= top;
-    *(p++) = byte;
+    bytes.push(byte);
+    // Copy the reverse order of our bytes to the output
+    return bytes.read_all(p);
   }
-  return p;
 }
 }

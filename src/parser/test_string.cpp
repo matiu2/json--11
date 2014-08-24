@@ -50,6 +50,13 @@ go_bandit([]() {
       AssertThat(output, Equals(expected));
     });
 
+    it("1.5. Can parse unicode char", [&]() {
+      std::string input = R"(\u03E0")";
+      std::string expected = u8"\u03E0";
+      auto output = json::parseString(input.begin(), input.end());
+      AssertThat(output, Equals(expected));
+    });
+
   });
 });
 
