@@ -165,7 +165,7 @@ void utf82wchar(Iterator in, Iterator end, OutIterator out) {
 
 /** Converts a UTF8 enconded string into a json string
  */
-std::string utf82json(const std::string& utf8) {
+inline std::string utf82json(const std::string& utf8) {
   std::string result;
   result.reserve(utf8.size() * 1.1);  // Assume a 10% size increase
   utf82json(utf8.cbegin(), utf8.cend(), back_inserter(result));
@@ -174,6 +174,6 @@ std::string utf82json(const std::string& utf8) {
 
 /** Converts a UTF8 enconded string into a json string
  */
-void utf82json(const std::string& utf8, std::string& out) {
+inline void utf82json(const std::string& utf8, std::string& out) {
   utf82json(utf8.cbegin(), utf8.cend(), back_inserter(out));
 }

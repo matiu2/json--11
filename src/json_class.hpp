@@ -21,7 +21,7 @@ struct JSON {
 public:
     enum Type {null, boolean, number, text, map, list};
 private:
-    friend std::ostream& operator <<(ostream& s, const JSON& j);
+    inline friend std::ostream& operator <<(ostream& s, const JSON& j);
     Type type;
     union Value {
         std::string as_string;
@@ -209,7 +209,7 @@ public:
     }
 };
 
-std::ostream &operator<<(ostream &s, const JMap &j) {
+inline std::ostream &operator<<(ostream &s, const JMap &j) {
   s << '{';
   auto entry = j.cbegin();
   auto end = j.cend();
@@ -226,7 +226,7 @@ std::ostream &operator<<(ostream &s, const JMap &j) {
   return s;
 }
 
-std::ostream &operator<<(ostream &s, const JList &j) {
+inline std::ostream &operator<<(ostream &s, const JList &j) {
   s << '[';
   auto entry = j.cbegin();
   auto end = j.cend();
@@ -242,7 +242,7 @@ std::ostream &operator<<(ostream &s, const JList &j) {
   return s;
 }
 
-std::ostream& operator <<(ostream& s, const JSON& j) {
+inline std::ostream& operator <<(ostream& s, const JSON& j) {
     switch(j.type) {
         case JSON::null: s << "null"; break;
         case JSON::boolean: s << (j.value.as_bool ? "true" : "false"); break;
@@ -260,7 +260,7 @@ std::ostream& operator <<(ostream& s, const JSON& j) {
     return s;
 }
 
-JSON JBool(bool val) {
+inline JSON JBool(bool val) {
     return JSON(val, 1);
 }
 
